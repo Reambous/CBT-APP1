@@ -14,7 +14,7 @@
         <div class="p-6 text-center border-b border-blue-700">
             <h2 class="text-2xl font-extrabold tracking-wider">CBT PESERTA</h2>
         </div>
-        <div class="flex-grow p-4">
+        <div class="grow p-4">
             <a href="#"
                 class="block py-3 px-4 rounded transition duration-200 bg-blue-900 hover:bg-blue-700 mb-2 font-medium">🏠
                 Dashboard Utama</a>

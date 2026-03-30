@@ -34,4 +34,6 @@ Route::middleware('auth:web')->group(function () {
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
 Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    // Tambahkan baris ajaib ini: Route Resource untuk CRUD Kategori
+    Route::resource('/admin/categories', App\Http\Controllers\Admin\ExamCategoryController::class)->names('admin.categories');
 });

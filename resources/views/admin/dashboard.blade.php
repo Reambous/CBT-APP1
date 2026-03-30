@@ -14,11 +14,12 @@
         <div class="p-6 text-center border-b border-gray-800">
             <h2 class="text-2xl font-extrabold text-red-500">CBT ADMIN</h2>
         </div>
-        <div class="flex-grow p-4">
+        <div class="grow p-4">
             <a href="#"
                 class="block py-2.5 px-4 rounded transition duration-200 bg-gray-800 hover:bg-gray-700 mb-2">📊
                 Dashboard</a>
-            <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">📚
+            <a href="{{ route('admin.categories.index') }}"
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">📚
                 Kategori Soal</a>
             <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">💰
                 Transaksi</a>
