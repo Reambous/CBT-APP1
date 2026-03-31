@@ -37,7 +37,5 @@ Route::middleware('auth:admin')->group(function () {
     // Tambahkan baris ajaib ini: Route Resource untuk CRUD Kategori
     Route::resource('/admin/categories', App\Http\Controllers\Admin\ExamCategoryController::class)->names('admin.categories');
     Route::resource('/admin/packages', App\Http\Controllers\Admin\ExamPackageController::class)->names('admin.packages');
-    Route::get('/admin/questions', function () {
-        return view('admin.questions.index');
-    })->name('admin.questions.index');
+    Route::resource('/admin/questions', App\Http\Controllers\Admin\QuestionController::class)->names('admin.questions');
 });

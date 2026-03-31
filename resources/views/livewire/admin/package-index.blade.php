@@ -69,9 +69,15 @@ new class extends Component {
                                 class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">{{ $package->examCategory->name }}</span>
                         </td>
                         <td class="px-6 py-4 text-sm font-medium">⏱️ {{ $package->time_limit }} Menit</td>
-                        <td class="px-6 py-4 text-right text-sm">
+
+                        <td class="px-6 py-4 text-right text-sm flex justify-end gap-2">
+                            <a href="{{ route('admin.packages.show', $package->id) }}"
+                                class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1 rounded transition-colors font-bold shadow-sm">
+                                ⚙️ Kelola Soal
+                            </a>
+
                             <a href="{{ route('admin.packages.edit', $package->id) }}"
-                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors mr-2">Edit</a>
+                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors">Edit</a>
                             <button wire:click="delete({{ $package->id }})" wire:confirm="Hapus paket ini?"
                                 class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded transition-colors">Hapus</button>
                         </td>

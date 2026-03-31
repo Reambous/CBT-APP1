@@ -43,6 +43,14 @@ class ExamPackageController extends Controller
         return redirect()->route('admin.packages.index')->with('success', 'Paket soal berhasil ditambahkan!');
     }
 
+    public function show(string $id)
+    {
+        // Cari paket berdasarkan ID, sekalian ambil data kategori dan soal-soalnya
+        $package = ExamPackage::with(['examCategory', 'questions'])->findOrFail($id);
+
+        // Buka halaman Ruang Kelola Soal
+        return view('admin.packages.show', compact('package'));
+    }
     // 4. Tampilkan Form Edit
     public function edit(ExamPackage $package)
     {
