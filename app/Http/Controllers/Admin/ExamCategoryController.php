@@ -11,9 +11,7 @@ class ExamCategoryController extends Controller
     // 1. Tampilkan Halaman Daftar Kategori
     public function index()
     {
-        // Mengambil data terbaru dan membuat pagination (10 baris per halaman)
-        $categories = ExamCategory::latest()->paginate(10);
-        return view('admin.categories.index', compact('categories'));
+        return view('admin.categories.index'); // Hapus query pencariannya
     }
 
     // 2. Tampilkan Form Tambah Kategori

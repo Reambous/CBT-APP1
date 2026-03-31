@@ -36,4 +36,8 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     // Tambahkan baris ajaib ini: Route Resource untuk CRUD Kategori
     Route::resource('/admin/categories', App\Http\Controllers\Admin\ExamCategoryController::class)->names('admin.categories');
+    Route::resource('/admin/packages', App\Http\Controllers\Admin\ExamPackageController::class)->names('admin.packages');
+    Route::get('/admin/questions', function () {
+        return view('admin.questions.index');
+    })->name('admin.questions.index');
 });

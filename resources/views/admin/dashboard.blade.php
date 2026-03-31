@@ -19,8 +19,10 @@
                 class="block py-2.5 px-4 rounded transition duration-200 bg-gray-800 hover:bg-gray-700 mb-2">📊
                 Dashboard</a>
             <a href="{{ route('admin.categories.index') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">📚
-                Kategori Soal</a>
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">📚 Kategori Soal</a>
+
+            <a href="{{ route('admin.packages.index') }}"
+                class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">📦 Paket Ujian</a>
             <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 mb-2">💰
                 Transaksi</a>
         </div>
