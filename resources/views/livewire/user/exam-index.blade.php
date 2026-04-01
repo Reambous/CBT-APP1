@@ -11,7 +11,7 @@ new class extends Component {
     use WithPagination;
 
     public $search = '';
-    public $selectedCategory = ''; // Variabel filter kategori
+    public $selectedCategory = '';
 
     public function updatingSearch()
     {
@@ -27,22 +27,22 @@ new class extends Component {
         $userId = Auth::id();
 
         $packages = ExamPackage::with('examCategory')
-            // KUNCI PERBAIKAN: Wajibkan paket memiliki kategori yang tidak di-Soft Delete
+            ->withCount('questions')
+            // KUNCI PERBAIKAN: Hanya tampilkan paket yang memiliki minimal 1 soal
+            ->has('questions')
             ->whereHas('examCategory', function ($query) {
                 $query->whereNull('deleted_at');
             })
-            // Lanjut filter dropdown kategori
             ->when($this->selectedCategory, function ($query) {
                 $query->where('exam_category_id', $this->selectedCategory);
             })
-            // Lanjut filter pencarian
             ->where(function ($query) {
                 $query->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($q) {
                     $q->whereNull('deleted_at')->where('name', 'like', '%' . $this->search . '%');
                 });
             })
             ->latest()
-            ->paginate(9);
+            ->paginate(10);
 
         $packageIds = $packages->pluck('id');
 
@@ -84,61 +84,70 @@ new class extends Component {
         ⏳ Memuat data...
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        @forelse($packages as $package)
-            @php $recentScores = $userResults->get($package->id, collect())->take(3); @endphp
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
-                <div class="p-6 grow flex flex-col">
-                    <div class="flex justify-between items-start mb-4">
-                        <span
-                            class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                            {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
-                        </span>
-                        <span class="text-gray-400 text-sm font-medium flex items-center gap-1">⏱️
-                            {{ $package->time_limit }} Menit</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{{ $package->title }}</h3>
-                    <div class="text-sm text-gray-500 mt-1 mb-4 flex-grow">📝 {{ $package->questions_count ?? 0 }} Butir
-                        Soal</div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="divide-y divide-gray-100">
+            @forelse($packages as $package)
+                @php $recentScores = $userResults->get($package->id, collect())->take(3); @endphp
+                <div
+                    class="p-5 md:p-6 hover:bg-blue-50/50 transition-colors flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
-                    @if ($recentScores->count() > 0)
-                        <div class="mt-auto pt-4 border-t border-gray-100">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Riwayat Nilai
-                                Terakhir:</p>
-                            <div class="flex gap-2 flex-wrap">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                            <span
+                                class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
+                            </span>
+                            <span class="text-gray-500 text-xs font-bold flex items-center gap-1">
+                                ⏱️ {{ $package->time_limit }} Menit
+                            </span>
+                            <span class="text-gray-500 text-xs font-bold flex items-center gap-1">
+                                📝 {{ $package->questions_count }} Soal
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 line-clamp-1">{{ $package->title }}</h3>
+                    </div>
+
+                    <div class="w-full md:w-auto flex flex-col items-start md:items-center">
+                        @if ($recentScores->count() > 0)
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nilai Terakhir:
+                            </p>
+                            <div class="flex gap-1">
                                 @foreach ($recentScores as $score)
                                     <span
-                                        class="px-2 py-1 text-xs font-black rounded-md border {{ $score->score >= 70 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200' }}"
+                                        class="px-2 py-1 text-xs font-black rounded text-center min-w-[36px] {{ $score->score >= 70 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}"
                                         title="Selesai pada: {{ \Carbon\Carbon::parse($score->finished_at)->format('d M Y') }}">
-                                        {{ number_format($score->score, 1) }}
+                                        {{ number_format($score->score, 0) }}
                                     </span>
                                 @endforeach
                             </div>
-                        </div>
-                    @else
-                        <div class="mt-auto pt-4 border-t border-gray-100">
-                            <p class="text-xs font-medium text-gray-400 italic">Belum pernah dikerjakan</p>
-                        </div>
-                    @endif
+                        @else
+                            <p
+                                class="text-xs font-medium text-gray-400 italic bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                                Belum dikerjakan</p>
+                        @endif
+                    </div>
+
+                    <div class="w-full md:w-auto flex-shrink-0">
+                        <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0 w-full">
+                            @csrf
+                            <button type="submit"
+                                class="w-full md:w-36 text-center {{ $recentScores->count() > 0 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
+                                {{ $recentScores->count() > 0 ? '🔄 Ulangi' : '🚀 Mulai' }}
+                            </button>
+                        </form>
+                    </div>
+
                 </div>
-                <div class="p-4 bg-gray-50 border-t border-gray-100">
-                    <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0">
-                        @csrf
-                        <button type="submit"
-                            class="w-full text-center {{ $recentScores->count() > 0 ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm">
-                            {{ $recentScores->count() > 0 ? '🔄 Kerjakan Ulang' : '🚀 Mulai Kerjakan' }}
-                        </button>
-                    </form>
+            @empty
+                <div class="p-10 text-center">
+                    <span class="text-4xl mb-3 block">📭</span>
+                    <h3 class="text-lg font-bold text-gray-800">Paket ujian tidak ditemukan</h3>
+                    <p class="text-gray-500 text-sm mt-1">Coba kata kunci pencarian yang lain.</p>
                 </div>
-            </div>
-        @empty
-            <div class="col-span-full bg-white p-8 rounded-xl border text-center shadow-sm"><span
-                    class="text-4xl mb-3 block">📭</span>
-                <h3 class="text-lg font-bold text-gray-800">Paket ujian tidak ditemukan</h3>
-            </div>
-        @endforelse
+            @endforelse
+        </div>
     </div>
+
     @if ($packages->hasPages())
         <div class="mt-8">{{ $packages->links() }}</div>
     @endif

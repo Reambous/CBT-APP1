@@ -117,6 +117,7 @@
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
         // Inisialisasi Quill untuk Soal
         var quillQuestion = new Quill('#editor-question', {
@@ -139,7 +140,7 @@
                     [{
                         'header': [1, 2, 3, false]
                     }],
-                    ['link', 'image', 'formula'], // Tombol Gambar aktif
+                    ['link', 'image', 'formula'],
                     ['clean']
                 ]
             }
@@ -151,20 +152,41 @@
             placeholder: 'Ketik pembahasan (opsional)...'
         });
 
-        // Saat form disubmit, pindahkan isi Quill (HTML) ke dalam tag <input hidden>
+        // Saat form disubmit, validasi dan pindahkan isi
         var form = document.getElementById('form-soal');
         form.onsubmit = function() {
             var questionHTML = quillQuestion.root.innerHTML;
             var explanationHTML = quillExplanation.root.innerHTML;
 
-            // Validasi manual jika editor kosong
+            // 1. Validasi manual jika teks soal kosong
             if (questionHTML === '<p><br></p>' || questionHTML.trim() === '') {
                 alert('Teks pertanyaan tidak boleh kosong!');
                 return false;
             }
 
+            // 2. VALIDASI KUNCI JAWABAN (Mencegah Kunci Kosong)
+            var checkedRadio = document.querySelector('input[name="correct_answer"]:checked');
+
+            // Pastikan ada radio button yang dipilih (meskipun di HTML sudah 'required')
+            if (checkedRadio) {
+                var selectedOption = checkedRadio.value; // Mendapatkan 'A', 'B', 'C', dll.
+                // Cari textarea yang sesuai dengan radio button yang dipilih
+                var textareaName = 'option_' + selectedOption.toLowerCase();
+                var optionText = document.querySelector('textarea[name="' + textareaName + '"]').value;
+
+                // Jika textarea-nya kosong, hentikan form!
+                if (optionText.trim() === '') {
+                    alert('Gagal! Anda memilih Opsi ' + selectedOption +
+                        ' sebagai Kunci Jawaban, tapi kotak teks Opsi ' + selectedOption + ' masih KOSONG.');
+                    return false; // Membatalkan pengiriman form
+                }
+            } else {
+                alert('Silakan pilih salah satu kunci jawaban terlebih dahulu!');
+                return false;
+            }
+
+            // Jika semua aman, masukkan data ke input hidden
             document.getElementById('question_text').value = questionHTML;
-            // Hanya masukkan penjelasan jika tidak kosong
             document.getElementById('explanation').value = explanationHTML === '<p><br></p>' ? '' : explanationHTML;
         };
     </script>

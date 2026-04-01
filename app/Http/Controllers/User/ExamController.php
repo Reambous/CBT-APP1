@@ -16,7 +16,8 @@ class ExamController extends Controller
 
         // 1. CEK PREMIUM: Tolak jika bukan user premium
         if (!$user->is_premium) {
-            return redirect()->route('user.dashboard')
+            // PERBAIKAN: Lempar ke user.exams agar tetap di halaman Katalog
+            return redirect()->route('user.exams')
                 ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk mengerjakan ujian ini.');
         }
 
@@ -24,11 +25,12 @@ class ExamController extends Controller
 
         // Validasi: Jangan mulai jika paket belum ada soalnya
         if ($package->questions_count == 0) {
-            return redirect()->route('user.dashboard')
+            // PERBAIKAN: Lempar ke user.exams
+            return redirect()->route('user.exams')
                 ->with('error', 'Paket ujian ini belum memiliki soal.');
         }
 
-        // 2. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa
+        // 2. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa (LOGIKAMU SUDAH KEREN!)
         $lastAttempt = UserResult::where('user_id', $user->id)
             ->where('exam_package_id', $package_id)
             ->max('attempt_number');
@@ -44,7 +46,7 @@ class ExamController extends Controller
             'finished_at'     => null, // Null menandakan ujian sedang berlangsung
         ]);
 
-        // 4. Arahkan ke Halaman Livewire Ujian yang sesungguhnya (akan kita buat setelah ini)
+        // 4. Arahkan ke Halaman Livewire Ujian yang sesungguhnya
         return redirect()->route('exam.play', $result->id);
     }
 

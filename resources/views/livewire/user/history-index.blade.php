@@ -122,10 +122,17 @@ new class extends Component {
                             <td class="px-6 py-4">
                                 <div class="font-bold text-gray-900 mb-1 line-clamp-1">
                                     {{ $history->examPackage->title }}</div>
-                                <span
-                                    class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                    {{ $history->examPackage?->examCategory?->name ?? 'Kategori Terhapus' }}
-                                </span>
+                                <div class="flex gap-2 items-center mt-1">
+                                    <span
+                                        class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        {{ $history->examPackage?->examCategory?->name ?? 'Kategori Terhapus' }}
+                                    </span>
+
+                                    <span
+                                        class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-purple-100">
+                                        Percobaan ke-{{ $history->attempt_number ?? 1 }}
+                                    </span>
+                                </div>
                             </td>
 
                             <td class="px-6 py-4 text-center">

@@ -9,13 +9,13 @@
             <span>⚠️</span> {{ session('error') }}
         </div>
     @endif
+
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 border-l-4 border-l-blue-500">
         <h2 class="text-2xl font-bold text-gray-800">Selamat datang kembali, {{ auth()->user()->name }}!</h2>
         <p class="text-gray-500 mt-1">Mari persiapkan ujianmu dengan maksimal hari ini.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-
         <div
             class="bg-white p-6 rounded-xl shadow-sm border border-t-4 {{ auth()->user()->is_premium ? 'border-t-green-500' : 'border-t-yellow-500' }}">
             <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-3">Status Akses</h3>
@@ -39,14 +39,20 @@
 
         <div class="bg-white p-6 rounded-xl shadow-sm border border-t-4 border-t-indigo-500">
             <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Ujian Diselesaikan</h3>
-            <p class="text-4xl font-extrabold text-gray-800 mt-2">0 <span
+            <p class="text-4xl font-extrabold text-gray-800 mt-2">{{ $completedExamsCount ?? 0 }} <span
                     class="text-lg font-medium text-gray-500">kali</span></p>
         </div>
     </div>
 
-    <h2 class="text-xl font-bold text-gray-800 mb-4">📝 Daftar Paket Ujian Tersedia</h2>
+    <div class="flex justify-between items-end mb-4 border-b pb-2">
+        <h2 class="text-xl font-bold text-gray-800">✨ 3 Paket Ujian Terbaru</h2>
+        <a href="{{ route('user.exams') }}"
+            class="text-blue-600 hover:text-blue-800 font-bold text-sm flex items-center gap-1 transition-colors">
+            Lihat Semua Katalog ➡️
+        </a>
+    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         @forelse($packages as $package)
             <div
                 class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
