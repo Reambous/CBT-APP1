@@ -44,7 +44,7 @@ new class extends Component {
             $data['password'] = Hash::make($this->password);
         }
 
-        // Logika Upload Foto (Sesuai aturan Bisnis Excel: Hapus foto lama)
+        // Logika Upload Foto (Hapus foto lama)
         if ($this->profile_picture) {
             if ($user->profile_picture && $user->profile_picture !== 'default.png') {
                 Storage::disk('public')->delete($user->profile_picture);
@@ -57,9 +57,26 @@ new class extends Component {
 
         return redirect()->route('user.dashboard')->with('success', 'Profil berhasil diperbarui!');
     }
+
+    // FUNGSI BARU: Hapus Akun Sendiri (Soft Delete)
+    public function deleteAccount()
+    {
+        $user = auth()->user();
+
+        // 1. Lakukan Soft Delete
+        $user->delete();
+
+        // 2. Logout secara paksa
+        auth()->logout();
+        session()->invalidate();
+        session()->regenerateToken();
+
+        // 3. Arahkan kembali ke halaman login
+        return redirect()->route('login')->with('success', 'Akun Anda telah berhasil dihapus dari sistem.');
+    }
 }; ?>
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto space-y-8 pb-12">
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b bg-gray-50/50">
             <h2 class="text-xl font-bold text-gray-800">Pengaturan Profil</h2>
@@ -117,9 +134,9 @@ new class extends Component {
                     </div>
 
                     <div class="pt-4 border-t border-dashed">
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Ganti Password <span
-                                class="text-xs font-normal text-gray-400">(Kosongkan jika tidak ingin
-                                ganti)</span></label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Ganti Password
+                            <span class="text-xs font-normal text-gray-400">(Kosongkan jika tidak ingin ganti)</span>
+                        </label>
                         <input type="password" wire:model="password" placeholder="••••••••"
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none">
                         @error('password')
@@ -136,5 +153,27 @@ new class extends Component {
                 </div>
             </div>
         </form>
+    </div>
+
+    <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 overflow-hidden">
+        <div class="p-6 border-b border-red-200 bg-red-100/50">
+            <h2 class="text-xl font-bold text-red-800">Zona Berbahaya</h2>
+            <p class="text-sm text-red-600">Tindakan di bawah ini tidak dapat dibatalkan secara mandiri.</p>
+        </div>
+        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h3 class="font-bold text-gray-800 text-lg">Hapus Akun Saya</h3>
+                <p class="text-sm text-gray-600 mt-1 max-w-2xl">
+                    Setelah dihapus, Anda akan otomatis keluar dari aplikasi dan tidak bisa masuk kembali tanpa bantuan
+                    Administrator. Data riwayat ujian Anda akan tetap aman di sistem kami (Soft Delete).
+                </p>
+            </div>
+
+            <button wire:click="deleteAccount"
+                wire:confirm="PERINGATAN KERAS! Apakah Anda sangat yakin ingin menghapus akun ini? Anda akan langsung dikeluarkan dari sistem."
+                class="whitespace-nowrap bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition transform active:scale-95">
+                🗑️ Hapus Akun Saya
+            </button>
+        </div>
     </div>
 </div>

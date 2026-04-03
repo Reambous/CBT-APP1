@@ -82,7 +82,7 @@ new class extends Component {
         @if (count($selected) > 0)
             <button wire:click="deleteSelected"
                 wire:confirm="PERINGATAN! Anda yakin ingin menghapus {{ count($selected) }} paket ujian beserta semua soal di dalamnya?"
-                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors animate-pulse">
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors ">
                 🗑️ Hapus Terpilih ({{ count($selected) }})
             </button>
         @endif

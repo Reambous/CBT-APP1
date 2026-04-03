@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - CBT</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
+    @livewireStyles
 </head>
 
 <body class="bg-gray-100 flex min-h-screen">
@@ -35,7 +36,6 @@
                 class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
                 👥 Manajemen User
             </a>
-
 
         </div>
         <div class="p-4 border-t border-gray-800">
@@ -90,7 +90,7 @@
         <main class="p-8 overflow-y-auto">
             @yield('content')
         </main>
-
+        @livewireScripts
     </div>
 
 </body>
