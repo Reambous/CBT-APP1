@@ -61,4 +61,10 @@ class UserDashboardController extends Controller
 
         return view('user.review', compact('result'));
     }
+
+    public function upgrade()
+    {
+        // Akan memanggil file resources/views/user/upgrade.blade.php
+        return view('user.upgrade');
+    }
 }

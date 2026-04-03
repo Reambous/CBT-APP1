@@ -1,4 +1,4 @@
-@extends('user.layouts.app')
+@extends('user.layouts.app') {{-- Ganti jika folder layoutmu berbeda, di kodemu tertulis 'user.layouts.app' --}}
 
 @section('title', 'Pembahasan Ujian - CBT APP')
 
@@ -23,7 +23,7 @@
             class="bg-white p-6 rounded-xl shadow-sm border border-blue-200 mb-8 border-l-4 border-l-blue-600 flex justify-between items-center">
             <div>
                 <span
-                    class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">{{ $result->examPackage->examCategory->name }}</span>
+                    class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase">{{ $result->examPackage->examCategory->name ?? 'Kategori' }}</span>
                 <h2 class="text-xl font-bold text-gray-800 mt-2">{{ $result->examPackage->title }}</h2>
             </div>
             <div class="text-right text-sm text-gray-500">
@@ -37,15 +37,33 @@
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
             <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                 🧩 Peta Jawaban Kamu
-                <span class="normal-case font-medium text-gray-400 text-xs">(Klik nomor merah untuk melihat letak
-                    kesalahan)</span>
+                <span class="normal-case font-medium text-gray-400 text-xs">(Klik nomor untuk melihat pembahasan)</span>
             </h3>
             <div class="flex flex-wrap gap-2">
-                @foreach ($result->userAnswers as $index => $answer)
-                    <button type="button" onclick="scrollToSoal('pembahasan-{{ $answer->question_id }}')"
-                        class="w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-bold text-white transition-all shadow-sm hover:opacity-80
-                            {{ $answer->is_correct ? 'bg-green-500 border-green-600' : 'bg-red-500 border-red-600' }}"
-                        title="Soal No. {{ $index + 1 }} ({{ $answer->is_correct ? 'Benar' : 'Salah' }})">
+                {{-- KITA LOOPING BERDASARKAN SOAL, BUKAN JAWABAN --}}
+                @foreach ($result->examPackage->questions as $index => $q)
+                    @php
+                        // Cari apakah user menjawab soal ini
+                        $ans = $result->userAnswers->where('question_id', $q->id)->first();
+                        $isAnswered = $ans && $ans->selected_option;
+                        $isCorrect = $ans ? $ans->is_correct : false;
+
+                        // Tentukan warna tombol peta
+                        if (!$isAnswered) {
+                            $btnClass = 'bg-yellow-400 border-yellow-500 text-yellow-900';
+                            $btnTitle = 'Kosong / Tidak Dijawab';
+                        } elseif ($isCorrect) {
+                            $btnClass = 'bg-green-500 border-green-600 text-white';
+                            $btnTitle = 'Benar';
+                        } else {
+                            $btnClass = 'bg-red-500 border-red-600 text-white';
+                            $btnTitle = 'Salah';
+                        }
+                    @endphp
+
+                    <button type="button" onclick="scrollToSoal('pembahasan-{{ $q->id }}')"
+                        class="w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-bold transition-all shadow-sm hover:opacity-80 {{ $btnClass }}"
+                        title="Soal No. {{ $index + 1 }} ({{ $btnTitle }})">
                         {{ $index + 1 }}
                     </button>
                 @endforeach
@@ -53,21 +71,38 @@
         </div>
 
         <div class="space-y-6">
-            @foreach ($result->userAnswers as $index => $answer)
+            {{-- KITA LOOPING BERDASARKAN SOAL JUGA DI SINI --}}
+            @foreach ($result->examPackage->questions as $index => $q)
                 @php
-                    $q = $answer->question;
-                    $userOpt = $answer->selected_option;
+                    $ans = $result->userAnswers->where('question_id', $q->id)->first();
+                    $userOpt = $ans ? $ans->selected_option : null;
                     $correctOpt = $q->correct_answer;
-                    $isCorrect = $answer->is_correct;
+                    $isCorrect = $ans ? $ans->is_correct : false;
+                    $isAnswered = $ans && $ans->selected_option;
+
+                    // Tentukan warna border & header box
+                    if (!$isAnswered) {
+                        $boxBorder = 'border-yellow-300';
+                        $headerBg = 'bg-yellow-50';
+                    } elseif ($isCorrect) {
+                        $boxBorder = 'border-green-300';
+                        $headerBg = 'bg-green-50';
+                    } else {
+                        $boxBorder = 'border-red-300';
+                        $headerBg = 'bg-red-50';
+                    }
                 @endphp
 
                 <div id="pembahasan-{{ $q->id }}"
-                    class="bg-white rounded-xl shadow-sm border scroll-mt-24 transition-all duration-300 {{ $isCorrect ? 'border-green-300' : 'border-red-300' }} overflow-hidden">
+                    class="bg-white rounded-xl shadow-sm border scroll-mt-24 transition-all duration-300 {{ $boxBorder }} overflow-hidden">
 
-                    <div
-                        class="px-6 py-3 border-b flex justify-between items-center {{ $isCorrect ? 'bg-green-50' : 'bg-red-50' }}">
+                    <div class="px-6 py-3 border-b flex justify-between items-center {{ $headerBg }}">
                         <h3 class="font-bold text-gray-800">Soal No. {{ $index + 1 }}</h3>
-                        @if ($isCorrect)
+
+                        @if (!$isAnswered)
+                            <span class="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">⚠️
+                                Tidak Dijawab</span>
+                        @elseif ($isCorrect)
                             <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">✅
                                 Benar</span>
                         @else
@@ -88,10 +123,6 @@
 
                                 @if ($optText)
                                     @php
-                                        // Logika Warna:
-                                        // 1. Jika ini kunci jawaban -> HIJAU
-                                        // 2. Jika ini jawaban user TAPI salah -> MERAH
-                                        // 3. Sisanya -> NETRAL
                                         $bgClass = 'bg-white border-gray-200';
                                         $textClass = 'text-gray-700';
                                         $icon = '';
@@ -124,10 +155,11 @@
                             @endforeach
                         </div>
 
-                        @if (!$userOpt)
+                        @if (!$isAnswered)
                             <div
                                 class="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm font-bold rounded-lg text-center">
-                                ⚠️ Kamu tidak menjawab soal ini (Dikosongkan)
+                                ⚠️ Kamu tidak menjawab soal ini (Dikosongkan). Jawaban yang benar adalah
+                                <b>{{ $correctOpt }}</b>.
                             </div>
                         @endif
                     </div>

@@ -24,4 +24,9 @@ class AdminDashboardController extends Controller
     {
         return view('admin.profile');
     }
+
+    public function transactions()
+    {
+        return view('admin.transactions');
+    }
 }

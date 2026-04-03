@@ -45,6 +45,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/user/history', [UserDashboardController::class, 'history'])->name('user.history');
     Route::get('/user/history/{id}/review', [UserDashboardController::class, 'review'])->name('user.review');
     Route::get('/profile', [UserDashboardController::class, 'profile'])->name('user.profile');
+    Route::get('/user/upgrade', [UserDashboardController::class, 'upgrade'])->name('user.upgrade');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
@@ -58,4 +59,5 @@ Route::middleware('auth:admin')->group(function () {
     Route::resource('/admin/users', App\Http\Controllers\Admin\UserController::class)->names('admin.users');
 
     Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
+    Route::get('/admin/transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'transactions'])->name('admin.transactions');
 });

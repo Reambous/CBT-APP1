@@ -34,7 +34,7 @@
 
 
 
-            <a href="#"
+            <a href="{{ route('user.upgrade') }}"
                 class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
                 💳 Upgrade Premium
             </a>

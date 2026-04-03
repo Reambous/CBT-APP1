@@ -37,6 +37,11 @@
                 👥 Manajemen User
             </a>
 
+            <a href="{{ route('admin.transactions') }}"
+                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.transactions') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                💳 Transaksi Premium
+            </a>
+
         </div>
         <div class="p-4 border-t border-gray-800">
             <form action="{{ route('logout') }}" method="POST">
