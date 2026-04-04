@@ -30,7 +30,7 @@ new class extends Component {
         $this->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admins,email,' . $admin->id,
-            'password' => 'nullable|min:8',
+            'password' => 'nullable|min:3',
             'profile_picture' => 'nullable|image|max:3072', // 3MB
         ]);
 

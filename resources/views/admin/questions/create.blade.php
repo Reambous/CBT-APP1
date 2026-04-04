@@ -10,7 +10,6 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
     <style>
-        /* Penyesuaian tinggi editor agar nyaman diketik */
         #editor-question {
             height: 250px;
         }
@@ -18,6 +17,12 @@
         #editor-explanation {
             height: 150px;
         }
+
+        .editor-option {
+            height: 100px;
+        }
+
+        /* Tinggi khusus untuk opsi A-E */
     </style>
 </head>
 
@@ -32,11 +37,13 @@
                 ✕ Batal & Kembali ke Paket
             </a>
         </div>
+
         @if (session('success'))
             <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm">
                 <span class="font-bold">Berhasil!</span> {{ session('success') }}
             </div>
         @endif
+
         <form action="{{ route('admin.questions.store') }}" method="POST" id="form-soal"
             class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-600">
             @csrf
@@ -70,13 +77,13 @@
             <div class="mb-8 bg-gray-50 p-6 rounded-lg border">
                 <div class="flex justify-between items-center mb-4">
                     <label class="text-gray-700 text-sm font-bold">Pilihan Jawaban</label>
-                    <span class="text-xs text-gray-500 italic">Pilih bulatan biru untuk menandai Kunci Jawaban.
-                        Kosongkan opsi jika tidak dibutuhkan.</span>
+                    <span class="text-xs text-gray-500 italic">Pilih bulatan biru untuk menandai Kunci. Sisipkan gambar
+                        jika perlu.</span>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @foreach (['A', 'B', 'C', 'D', 'E'] as $opt)
-                        <div class="flex items-start gap-3 bg-white p-3 rounded border shadow-sm">
+                        <div class="flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm">
                             <div class="flex items-center h-full pt-2">
                                 <input type="radio" name="correct_answer" value="{{ $opt }}"
                                     class="w-5 h-5 text-blue-600 focus:ring-blue-500" required>
@@ -84,9 +91,9 @@
                             <div class="w-full">
                                 <label class="text-xs font-bold text-gray-500 mb-1 block">Opsi
                                     {{ $opt }}</label>
-                                <textarea name="option_{{ strtolower($opt) }}" rows="2"
-                                    class="w-full px-3 py-2 border rounded focus:border-blue-500 outline-none"
-                                    placeholder="Ketik jawaban {{ $opt }}..."></textarea>
+                                <div id="editor-option-{{ strtolower($opt) }}" class="editor-option bg-white"></div>
+                                <input type="hidden" name="option_{{ strtolower($opt) }}"
+                                    id="input-option-{{ strtolower($opt) }}">
                             </div>
                         </div>
                     @endforeach
@@ -102,8 +109,6 @@
             <hr class="mb-6">
 
             <div class="flex justify-end gap-4">
-
-
                 <button type="submit" name="action" value="save_and_close"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors">
                     💾 Simpan & Kembali
@@ -117,80 +122,107 @@
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script>
-        // Inisialisasi Quill untuk Soal
+        // Konfigurasi Toolbar Umum (Lengkap)
+        var fullToolbar = [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{
+                'list': 'ordered'
+            }, {
+                'list': 'bullet'
+            }],
+            [{
+                'script': 'sub'
+            }, {
+                'script': 'super'
+            }],
+            [{
+                'header': [1, 2, 3, false]
+            }],
+            ['link', 'image', 'formula'],
+            ['clean']
+        ];
+
+        // Konfigurasi Toolbar Mini (Untuk Opsi A-E agar tidak kepenuhan)
+        var miniToolbar = [
+            ['bold', 'italic'],
+            [{
+                'script': 'sub'
+            }, {
+                'script': 'super'
+            }],
+            ['image', 'formula']
+        ];
+
         var quillQuestion = new Quill('#editor-question', {
             theme: 'snow',
-            placeholder: 'Ketik pertanyaan di sini...',
+            placeholder: 'Ketik pertanyaan...',
             modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'code-block'],
-                    [{
-                        'list': 'ordered'
-                    }, {
-                        'list': 'bullet'
-                    }],
-                    [{
-                        'script': 'sub'
-                    }, {
-                        'script': 'super'
-                    }],
-                    [{
-                        'header': [1, 2, 3, false]
-                    }],
-                    ['link', 'image', 'formula'],
-                    ['clean']
-                ]
+                toolbar: fullToolbar
+            }
+        });
+        var quillExplanation = new Quill('#editor-explanation', {
+            theme: 'snow',
+            placeholder: 'Ketik pembahasan...',
+            modules: {
+                toolbar: fullToolbar
             }
         });
 
-        // Inisialisasi Quill untuk Pembahasan
-        var quillExplanation = new Quill('#editor-explanation', {
-            theme: 'snow',
-            placeholder: 'Ketik pembahasan (opsional)...'
+        // Looping untuk membuat 5 Editor Opsi sekaligus
+        var quillOptions = {};
+        ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+            quillOptions[opt] = new Quill('#editor-option-' + opt, {
+                theme: 'snow',
+                placeholder: 'Ketik atau sisipkan gambar opsi ' + opt.toUpperCase() + '...',
+                modules: {
+                    toolbar: miniToolbar
+                }
+            });
         });
 
-        // Saat form disubmit, validasi dan pindahkan isi
+        // Saat form disubmit
         var form = document.getElementById('form-soal');
         form.onsubmit = function() {
             var questionHTML = quillQuestion.root.innerHTML;
-            var explanationHTML = quillExplanation.root.innerHTML;
 
-            // 1. Validasi manual jika teks soal kosong
             if (questionHTML === '<p><br></p>' || questionHTML.trim() === '') {
                 alert('Teks pertanyaan tidak boleh kosong!');
                 return false;
             }
 
-            // 2. VALIDASI KUNCI JAWABAN (Mencegah Kunci Kosong)
             var checkedRadio = document.querySelector('input[name="correct_answer"]:checked');
+            var isCorrectOptionEmpty = false;
 
-            // Pastikan ada radio button yang dipilih (meskipun di HTML sudah 'required')
-            if (checkedRadio) {
-                var selectedOption = checkedRadio.value; // Mendapatkan 'A', 'B', 'C', dll.
-                // Cari textarea yang sesuai dengan radio button yang dipilih
-                var textareaName = 'option_' + selectedOption.toLowerCase();
-                var optionText = document.querySelector('textarea[name="' + textareaName + '"]').value;
+            // Masukkan data dari kelima Editor Opsi ke dalam input hidden
+            ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+                var optHTML = quillOptions[opt].root.innerHTML;
+                if (optHTML === '<p><br></p>') optHTML = '';
 
-                // Jika textarea-nya kosong, hentikan form!
-                if (optionText.trim() === '') {
-                    alert('Gagal! Anda memilih Opsi ' + selectedOption +
-                        ' sebagai Kunci Jawaban, tapi kotak teks Opsi ' + selectedOption + ' masih KOSONG.');
-                    return false; // Membatalkan pengiriman form
+                document.getElementById('input-option-' + opt).value = optHTML;
+
+                // Cek apakah opsi yang dijadikan kunci itu kosong
+                if (checkedRadio && checkedRadio.value.toLowerCase() === opt && optHTML.trim() === '') {
+                    isCorrectOptionEmpty = true;
                 }
-            } else {
+            });
+
+            if (!checkedRadio) {
                 alert('Silakan pilih salah satu kunci jawaban terlebih dahulu!');
                 return false;
             }
 
-            // Jika semua aman, masukkan data ke input hidden
+            if (isCorrectOptionEmpty) {
+                alert('Gagal! Anda memilih Kunci Jawaban yang isinya (teks/gambar) masih kosong.');
+                return false;
+            }
+
+            var explanationHTML = quillExplanation.root.innerHTML;
             document.getElementById('question_text').value = questionHTML;
             document.getElementById('explanation').value = explanationHTML === '<p><br></p>' ? '' : explanationHTML;
         };
     </script>
-
 </body>
 
 </html>

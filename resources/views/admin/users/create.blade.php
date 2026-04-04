@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('admin.layouts.sidebar') {{-- Sesuaikan dengan nama layout admin kamu --}}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah User - CBT ADMIN</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-100 flex min-h-screen">
-
-    @include('admin.layouts.sidebar')
-
-    <div class="flex-1 p-8 max-w-4xl mx-auto w-full">
+@section('content')
+    <div class="max-w-4xl mx-auto w-full">
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Daftarkan User Baru</h1>
             <a href="{{ route('admin.users.index') }}"
@@ -63,8 +52,8 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2">Aktivasi Membership</label>
                     <div class="flex items-center gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                         <input type="checkbox" name="is_premium" id="is_premium" value="1"
-                            {{ old('is_premium') ? 'checked' : '' }}
-                            class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" onchange="togglePremiumDate()">
+                            {{ old('is_premium') ? 'checked' : '' }} class="w-5 h-5 text-yellow-600 focus:ring-yellow-500"
+                            onchange="togglePremiumDate()">
                         <label for="is_premium" class="text-sm font-bold text-yellow-800 cursor-pointer">Jadikan User
                             Premium 👑</label>
                     </div>
@@ -104,6 +93,4 @@
             }
         }
     </script>
-</body>
-
-</html>
+@endsection

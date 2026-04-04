@@ -18,20 +18,21 @@ class ExamPackage extends Model
     // Relasi ke Atas: Dimiliki oleh 1 Kategori
     public function examCategory()
     {
-        return $this->belongsTo(ExamCategory::class);
-        return $this->belongsTo(ExamCategory::class)->withTrashed();
+        // PERBAIKAN: Hapus return ganda & tuliskan nama kolomnya secara eksplisit (jelas)
+        return $this->belongsTo(ExamCategory::class, 'exam_category_id', 'id')->withTrashed();
     }
 
     // Relasi ke Bawah: Memiliki banyak Pertanyaan
     public function questions()
     {
-        return $this->hasMany(Question::class);
+        // Sekalian kita buat eksplisit agar kebal dari error
+        return $this->hasMany(Question::class, 'exam_package_id', 'id');
     }
 
     // Relasi ke Bawah: Pernah dikerjakan (menghasilkan banyak nilai)
     public function userResults()
     {
-        return $this->hasMany(UserResult::class);
+        return $this->hasMany(UserResult::class, 'exam_package_id', 'id');
     }
 
     protected static function booted()

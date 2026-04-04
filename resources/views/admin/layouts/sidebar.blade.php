@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - CBT</title>
+    <title>UKAICHAMPION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,7 +15,7 @@
 
     <div class="w-64 bg-gray-900 text-white flex flex-col shadow-xl min-h-screen">
         <div class="p-6 text-center border-b border-gray-800">
-            <h2 class="text-2xl font-extrabold text-red-500">CBT ADMIN</h2>
+            <h2 class="text-2xl font-extrabold text-red-500">UKAICHAMPIONS</h2>
         </div>
         <div class="grow p-4">
             <a href="{{ route('admin.dashboard') }}"

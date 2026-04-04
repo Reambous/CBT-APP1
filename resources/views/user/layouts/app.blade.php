@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'CBT Peserta')</title>
+    <title>@yield('title', 'UKAICHAMPION')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,7 +15,7 @@
 
     <div class="w-64 bg-blue-800 text-white flex flex-col shadow-xl">
         <div class="p-6 text-center border-b border-blue-700">
-            <h2 class="text-2xl font-extrabold tracking-wider">CBT PESERTA</h2>
+            <h2 class="text-2xl font-extrabold tracking-wider">UKAICHAMPION</h2>
         </div>
         <div class="grow p-4">
             <a href="{{ route('user.dashboard') }}"
