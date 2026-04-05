@@ -143,7 +143,14 @@
                                     <div class="flex items-start gap-4 p-4 border rounded-xl {{ $bgClass }}">
                                         <div class="font-bold text-lg {{ $textClass }} pt-0.5">{{ $opt }}.
                                         </div>
-                                        <div class="flex-grow {{ $textClass }}">{!! $optText !!}</div>
+                                        <div class="flex-grow {{ $textClass }}">
+                                            @if ($q->is_answer_image)
+                                                <img src="{{ asset('storage/' . $optText) }}"
+                                                    class="max-h-64 w-auto object-contain rounded-lg border border-gray-200 shadow-sm mt-1">
+                                            @else
+                                                {!! $optText !!}
+                                            @endif
+                                        </div>
                                         @if ($icon)
                                             <div
                                                 class="flex-shrink-0 text-sm font-bold {{ $opt === $correctOpt ? 'text-green-600' : 'text-red-600' }}">

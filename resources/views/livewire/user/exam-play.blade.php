@@ -147,29 +147,32 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="p-6 text-gray-800 text-lg leading-relaxed border-b">
-                        {{-- Ganti 'question' di bawah ini dengan nama kolom teks soalmu di database jika berbeda --}}
+                    <div class="p-6 text-gray-800 text-lg leading-relaxed border-b"
+                        wire:key="q-text-{{ $currentQ->id }}">
                         {!! $currentQ->question_text !!}
                     </div>
 
-                    <div class="space-y-4 p-6">
-                        @foreach (['A', 'B', 'C', 'D', 'E'] as $opt)
-                            @php $optionField = 'option_' . strtolower($opt); @endphp
+                    <div class="grid grid-cols-1 gap-4 mt-6 p-6" wire:key="options-wrapper-{{ $currentQ->id }}">
+                        @foreach (['a', 'b', 'c', 'd', 'e'] as $opt)
+                            @php $val = "option_$opt"; @endphp
 
-                            @if ($currentQ->$optionField)
-                                <label wire:key="opt-{{ $currentQ->id }}-{{ $opt }}"
-                                    class="flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'bg-blue-50 border-blue-500 shadow-sm' : 'hover:bg-gray-50 border-gray-100' }}">
+                            @if ($currentQ->$val)
+                                <label wire:key="option-{{ $currentQ->id }}-{{ $opt }}"
+                                    class="flex items-center gap-4 p-4 border rounded-xl cursor-pointer hover:bg-blue-50 transition {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == strtoupper($opt) ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-400' : '' }}">
 
-                                    <div class="pt-1">
-                                        <input type="radio" name="jawaban_{{ $currentQ->id }}"
-                                            wire:click="answerQuestion({{ $currentQ->id }}, '{{ $opt }}')"
-                                            {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'checked' : '' }}
-                                            class="w-5 h-5 text-blue-600 cursor-pointer">
-                                    </div>
+                                    <input type="radio" name="answer_{{ $currentQ->id }}"
+                                        value="{{ strtoupper($opt) }}"
+                                        wire:click="answerQuestion({{ $currentQ->id }}, '{{ strtoupper($opt) }}')"
+                                        class="w-5 h-5 text-blue-600"
+                                        {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == strtoupper($opt) ? 'checked' : '' }}>
 
-                                    <div class="flex gap-3 text-gray-700">
-                                        <span class="font-bold">{{ $opt }}.</span>
-                                        <div class="prose max-w-none">{!! $currentQ->$optionField !!}</div>
+                                    <div class="text-gray-800 w-full">
+                                        @if ($currentQ->is_answer_image)
+                                            <img src="{{ asset('storage/' . $currentQ->$val) }}"
+                                                class="max-h-96 w-auto object-contain rounded-lg border border-gray-200 shadow-sm">
+                                        @else
+                                            {!! $currentQ->$val !!}
+                                        @endif
                                     </div>
                                 </label>
                             @endif

@@ -19,6 +19,7 @@ class Question extends Model
         'option_e',
         'correct_answer',
         'explanation',
+        'is_answer_image',
     ];
 
     // Relasi ke Atas: Bagian dari 1 Paket Soal

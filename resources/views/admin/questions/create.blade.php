@@ -44,7 +44,7 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.questions.store') }}" method="POST" id="form-soal"
+        <form action="{{ route('admin.questions.store') }}" method="POST" id="form-soal" enctype="multipart/form-data"
             class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-600">
             @csrf
 
@@ -75,15 +75,25 @@
             </div>
 
             <div class="mb-8 bg-gray-50 p-6 rounded-lg border">
-                <div class="flex justify-between items-center mb-4">
-                    <label class="text-gray-700 text-sm font-bold">Pilihan Jawaban</label>
-                    <span class="text-xs text-gray-500 italic">Pilih bulatan biru untuk menandai Kunci. Sisipkan gambar
-                        jika perlu.</span>
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <label class="text-gray-700 text-sm font-bold">Pilihan Jawaban</label>
+                        <p class="text-xs text-gray-500 mt-1">Tentukan apakah jawaban berupa Teks atau Gambar.</p>
+                    </div>
+
+                    <label class="inline-flex items-center cursor-pointer">
+                        <span class="mr-3 text-sm font-medium text-gray-700">Mode Gambar</span>
+                        <input type="checkbox" name="is_answer_image" id="toggle-image" class="sr-only peer"
+                            value="1">
+                        <div
+                            class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                        </div>
+                    </label>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @foreach (['A', 'B', 'C', 'D', 'E'] as $opt)
-                        <div class="flex items-start gap-3 bg-white p-3 rounded-lg border shadow-sm">
+                        <div class="flex items-start gap-3 bg-white p-4 rounded-lg border shadow-sm">
                             <div class="flex items-center h-full pt-2">
                                 <input type="radio" name="correct_answer" value="{{ $opt }}"
                                     class="w-5 h-5 text-blue-600 focus:ring-blue-500" required>
@@ -91,9 +101,17 @@
                             <div class="w-full">
                                 <label class="text-xs font-bold text-gray-500 mb-1 block">Opsi
                                     {{ $opt }}</label>
-                                <div id="editor-option-{{ strtolower($opt) }}" class="editor-option bg-white"></div>
-                                <input type="hidden" name="option_{{ strtolower($opt) }}"
-                                    id="input-option-{{ strtolower($opt) }}">
+
+                                <div id="text-wrapper-{{ strtolower($opt) }}" class="mode-text">
+                                    <textarea name="option_{{ strtolower($opt) }}" rows="2"
+                                        class="w-full px-3 py-2 border rounded focus:border-blue-500 outline-none" placeholder="Ketik teks jawaban..."></textarea>
+                                </div>
+
+                                <div id="image-wrapper-{{ strtolower($opt) }}" class="mode-image hidden">
+                                    <input type="file" name="image_{{ strtolower($opt) }}"
+                                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        accept="image/*">
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -144,7 +162,7 @@
             ['clean']
         ];
 
-        // Konfigurasi Toolbar Mini (Untuk Opsi A-E agar tidak kepenuhan)
+        // Konfigurasi Toolbar Mini (Untuk Opsi A-E)
         var miniToolbar = [
             ['bold', 'italic'],
             [{
@@ -152,7 +170,7 @@
             }, {
                 'script': 'super'
             }],
-            ['image', 'formula']
+            ['formula'] // Tombol image dihilangkan di sini karena sudah ada mode gambar khusus
         ];
 
         var quillQuestion = new Quill('#editor-question', {
@@ -162,6 +180,7 @@
                 toolbar: fullToolbar
             }
         });
+
         var quillExplanation = new Quill('#editor-explanation', {
             theme: 'snow',
             placeholder: 'Ketik pembahasan...',
@@ -170,54 +189,87 @@
             }
         });
 
-        // Looping untuk membuat 5 Editor Opsi sekaligus
+        // Looping untuk membuat 5 Editor Opsi sekaligus (Mode Teks)
         var quillOptions = {};
         ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
             quillOptions[opt] = new Quill('#editor-option-' + opt, {
                 theme: 'snow',
-                placeholder: 'Ketik atau sisipkan gambar opsi ' + opt.toUpperCase() + '...',
+                placeholder: 'Ketik teks opsi ' + opt.toUpperCase() + '...',
                 modules: {
                     toolbar: miniToolbar
                 }
             });
         });
 
-        // Saat form disubmit
+        // --- LOGIKA TOGGLE (GANTI MODE) ---
+        const toggle = document.getElementById('toggle-image');
+        const modeTextElements = document.querySelectorAll('.mode-text');
+        const modeImageElements = document.querySelectorAll('.mode-image');
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Mode Gambar Aktif: Sembunyikan Quill, Tampilkan Input File
+                modeTextElements.forEach(el => el.classList.add('hidden'));
+                modeImageElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                // Mode Teks Aktif: Tampilkan Quill, Sembunyikan Input File
+                modeTextElements.forEach(el => el.classList.remove('hidden'));
+                modeImageElements.forEach(el => el.classList.add('hidden'));
+            }
+        });
+
+        // --- LOGIKA SAAT TOMBOL SIMPAN DIKLIK ---
         var form = document.getElementById('form-soal');
         form.onsubmit = function() {
             var questionHTML = quillQuestion.root.innerHTML;
 
+            // Validasi Soal Kosong
             if (questionHTML === '<p><br></p>' || questionHTML.trim() === '') {
                 alert('Teks pertanyaan tidak boleh kosong!');
                 return false;
             }
 
+            // Validasi Kunci Jawaban Belum Dipilih
             var checkedRadio = document.querySelector('input[name="correct_answer"]:checked');
-            var isCorrectOptionEmpty = false;
-
-            // Masukkan data dari kelima Editor Opsi ke dalam input hidden
-            ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
-                var optHTML = quillOptions[opt].root.innerHTML;
-                if (optHTML === '<p><br></p>') optHTML = '';
-
-                document.getElementById('input-option-' + opt).value = optHTML;
-
-                // Cek apakah opsi yang dijadikan kunci itu kosong
-                if (checkedRadio && checkedRadio.value.toLowerCase() === opt && optHTML.trim() === '') {
-                    isCorrectOptionEmpty = true;
-                }
-            });
-
             if (!checkedRadio) {
                 alert('Silakan pilih salah satu kunci jawaban terlebih dahulu!');
                 return false;
             }
 
-            if (isCorrectOptionEmpty) {
-                alert('Gagal! Anda memilih Kunci Jawaban yang isinya (teks/gambar) masih kosong.');
-                return false;
+            var selectedOption = checkedRadio.value.toLowerCase();
+            var isImageMode = toggle.checked;
+
+            if (isImageMode) {
+                // 1. VALIDASI JIKA SEDANG MODE GAMBAR
+                var fileInput = document.querySelector('input[name="image_' + selectedOption + '"]');
+                if (!fileInput || fileInput.files.length === 0) {
+                    alert('Gagal! Anda menjadikan Opsi ' + checkedRadio.value +
+                        ' sebagai Kunci Jawaban, tapi Anda belum meng-upload gambarnya.');
+                    return false;
+                }
+            } else {
+                // 2. VALIDASI JIKA SEDANG MODE TEKS
+                var isCorrectOptionEmpty = false;
+                ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+                    var optHTML = quillOptions[opt].root.innerHTML;
+                    if (optHTML === '<p><br></p>') optHTML = '';
+
+                    document.getElementById('input-option-' + opt).value = optHTML;
+
+                    // Cek apakah opsi yang dijadikan kunci itu kosong
+                    if (opt === selectedOption && optHTML.trim() === '') {
+                        isCorrectOptionEmpty = true;
+                    }
+                });
+
+                if (isCorrectOptionEmpty) {
+                    alert('Gagal! Anda menjadikan Opsi ' + checkedRadio.value +
+                        ' sebagai Kunci Jawaban, tapi kotak teksnya masih kosong.');
+                    return false;
+                }
             }
 
+            // Pindahkan isi editor ke input hidden
             var explanationHTML = quillExplanation.root.innerHTML;
             document.getElementById('question_text').value = questionHTML;
             document.getElementById('explanation').value = explanationHTML === '<p><br></p>' ? '' : explanationHTML;

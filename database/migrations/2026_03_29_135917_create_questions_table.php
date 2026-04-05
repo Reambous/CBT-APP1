@@ -14,20 +14,19 @@ return new class extends Migration
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('exam_package_id')->constrained()->cascadeOnDelete();
-
-            // UBAH 'text' MENJADI 'longText' DI SINI:
             $table->longText('question_text');
-            $table->longText('option_a')->nullable();
-            $table->longText('option_b')->nullable();
-            $table->longText('option_c')->nullable();
-            $table->longText('option_d')->nullable();
-            $table->longText('option_e')->nullable();
+
+            // Fitur Task 4: Penanda apakah opsi berupa gambar
+            $table->boolean('is_answer_image')->default(false);
+
+            $table->text('option_a')->nullable();
+            $table->text('option_b')->nullable();
+            $table->text('option_c')->nullable();
+            $table->text('option_d')->nullable();
+            $table->text('option_e')->nullable();
 
             $table->char('correct_answer', 1);
-
-            // DAN DI SINI JUGA:
             $table->longText('explanation')->nullable();
-
             $table->timestamps();
             $table->softDeletes();
         });

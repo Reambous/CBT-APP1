@@ -26,28 +26,27 @@ class QuestionController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'exam_package_id' => 'required|exists:exam_packages,id',
-            'question_text'   => 'required', // Hapus 'string' agar Quill Editor lancar
-            'option_a'        => 'required', // Minimal A wajib isi
-            'option_b'        => 'required', // Minimal B wajib isi
-            'option_c'        => 'nullable',
-            'option_d'        => 'nullable',
-            'option_e'        => 'nullable',
-            'correct_answer'  => 'required|in:A,B,C,D,E',
-            'explanation'     => 'nullable',
-        ]);
+        $isImage = $request->has('is_answer_image');
+        $options = ['a', 'b', 'c', 'd', 'e'];
+        $data = $request->all();
 
-        \App\Models\Question::create($validated);
-
-        // Gunakan variabel $validated agar lebih konsisten
-        if ($request->input('action') === 'save_and_add') {
-            return redirect()->route('admin.questions.create', ['package_id' => $validated['exam_package_id']])
-                ->with('success', 'Soal sebelumnya berhasil disimpan! Silakan ketik soal berikutnya.');
+        if ($isImage) {
+            foreach ($options as $opt) {
+                if ($request->hasFile("image_$opt")) {
+                    // Simpan gambar ke folder storage/public/options
+                    $path = $request->file("image_$opt")->store('options', 'public');
+                    $data["option_$opt"] = $path;
+                }
+            }
         }
 
-        return redirect()->route('admin.packages.show', $validated['exam_package_id'])
-            ->with('success', 'Soal berhasil ditambahkan!');
+        // Set status is_answer_image ke database
+        $data['is_answer_image'] = $isImage;
+
+        \App\Models\Question::create($data);
+
+        return redirect()->route('admin.packages.show', $request->exam_package_id)
+            ->with('success', 'Soal berhasil disimpan!');
     }
 
     public function edit(string $id)
@@ -62,28 +61,32 @@ class QuestionController extends Controller
         return view('admin.questions.edit', compact('question', 'packages'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        // Validasi data baru
-        $validated = $request->validate([
-            'exam_package_id' => 'required|exists:exam_packages,id',
-            'question_text' => 'required|string',
-            'option_a' => 'nullable|string',
-            'option_b' => 'nullable|string',
-            'option_c' => 'nullable|string',
-            'option_d' => 'nullable|string',
-            'option_e' => 'nullable|string',
-            'correct_answer' => 'required|in:A,B,C,D,E',
-            'explanation' => 'nullable|string',
-        ]);
+        $question = \App\Models\Question::findOrFail($id);
+        $isImage = $request->has('is_answer_image');
+        $options = ['a', 'b', 'c', 'd', 'e'];
 
-        // Cari soal lama dan perbarui dengan data baru
-        $question = Question::findOrFail($id);
-        $question->update($validated);
+        $data = $request->all(); // Ambil semua data request
+        $data['is_answer_image'] = $isImage;
 
-        // Kembalikan ke Ruang Kelola Soal paket tersebut
+        if ($isImage) {
+            foreach ($options as $opt) {
+                // Jika admin upload gambar baru, timpa yang lama
+                if ($request->hasFile("image_$opt")) {
+                    $path = $request->file("image_$opt")->store('options', 'public');
+                    $data["option_$opt"] = $path;
+                } else {
+                    // Jika tidak upload baru, tetap gunakan path gambar yang lama
+                    $data["option_$opt"] = $question->{"option_$opt"};
+                }
+            }
+        }
+
+        $question->update($data);
+
         return redirect()->route('admin.packages.show', $question->exam_package_id)
-            ->with('success', 'Perubahan soal berhasil disimpan!');
+            ->with('success', 'Soal berhasil diperbarui!');
     }
 
     public function destroy(string $id)
