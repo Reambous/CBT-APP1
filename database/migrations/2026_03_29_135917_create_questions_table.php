@@ -13,18 +13,20 @@ return new class extends Migration
     {
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            // Relasi ke tabel exam_packages
             $table->foreignId('exam_package_id')->constrained()->cascadeOnDelete();
 
-            $table->text('question_text'); // Teks pertanyaan
-            $table->text('option_a')->nullable(); // Dibuat nullable jika soal hanya sampai A
-            $table->text('option_b')->nullable(); // Dibuat nullable jika soal hanya sampai A
-            $table->text('option_c')->nullable(); // Dibuat nullable jika soal hanya sampai B
-            $table->text('option_d')->nullable(); // Dibuat nullable jika soal hanya sampai c
-            $table->text('option_e')->nullable(); // Dibuat nullable jika soal hanya sampai D
+            // UBAH 'text' MENJADI 'longText' DI SINI:
+            $table->longText('question_text');
+            $table->longText('option_a')->nullable();
+            $table->longText('option_b')->nullable();
+            $table->longText('option_c')->nullable();
+            $table->longText('option_d')->nullable();
+            $table->longText('option_e')->nullable();
 
-            $table->char('correct_answer', 1); // Kunci jawaban (A/B/C/D/E)
-            $table->text('explanation')->nullable(); // Teks pembahasan soal
+            $table->char('correct_answer', 1);
+
+            // DAN DI SINI JUGA:
+            $table->longText('explanation')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
