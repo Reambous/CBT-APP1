@@ -9,35 +9,35 @@ use Illuminate\Support\Facades\Auth;
 
 class ExamController extends Controller
 {
+
     // Fungsi saat tombol "Mulai Kerjakan" ditekan
     public function startExam($package_id)
     {
         $user = Auth::user();
 
-        // 1. CEK PREMIUM: Tolak jika bukan user premium
-        if (!$user->is_premium) {
-            // PERBAIKAN: Lempar ke user.exams agar tetap di halaman Katalog
-            return redirect()->route('user.exams')
-                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk mengerjakan ujian ini.');
-        }
-
+        // 1. AMBIL DATA PAKET TERLEBIH DAHULU
         $package = ExamPackage::withCount('questions')->findOrFail($package_id);
 
-        // Validasi: Jangan mulai jika paket belum ada soalnya
+        // 2. CEK SOAL KOSONG: Jangan mulai jika paket belum ada soalnya
         if ($package->questions_count == 0) {
-            // PERBAIKAN: Lempar ke user.exams
             return redirect()->route('user.exams')
                 ->with('error', 'Paket ujian ini belum memiliki soal.');
         }
 
-        // 2. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa (LOGIKAMU SUDAH KEREN!)
+        // 3. CEK AKSES PREMIUM: Tolak JIKA paketnya premium TAPI usernya gratisan
+        if ($package->is_premium && !$user->is_premium) {
+            return redirect()->route('user.exams')
+                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk mengerjakan ujian ini.');
+        }
+
+        // 4. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa
         $lastAttempt = UserResult::where('user_id', $user->id)
             ->where('exam_package_id', $package_id)
             ->max('attempt_number');
 
         $currentAttempt = $lastAttempt ? $lastAttempt + 1 : 1;
 
-        // 3. BUAT KERTAS UJIAN: Catat ke tabel USER_RESULTS
+        // 5. BUAT KERTAS UJIAN: Catat ke tabel USER_RESULTS
         $result = UserResult::create([
             'user_id'         => $user->id,
             'exam_package_id' => $package_id,
@@ -46,7 +46,7 @@ class ExamController extends Controller
             'finished_at'     => null, // Null menandakan ujian sedang berlangsung
         ]);
 
-        // 4. Arahkan ke Halaman Livewire Ujian yang sesungguhnya
+        // 6. Arahkan ke Halaman Livewire Ujian yang sesungguhnya
         return redirect()->route('exam.play', $result->id);
     }
 

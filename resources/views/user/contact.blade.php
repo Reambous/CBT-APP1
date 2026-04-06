@@ -11,12 +11,13 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-                <div class="text-4xl mb-4">🟢</div>
+            <a href="https://wa.me/{{ $contactData['whatsapp'] }}" target="_blank"
+                class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:border-green-500 hover:shadow-lg transition-all text-center block group cursor-pointer">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🟢</div>
                 <h3 class="font-bold text-gray-800 text-lg">WhatsApp</h3>
                 <p class="text-blue-600 font-bold mt-2 text-sm">+{{ $contactData['whatsapp'] }}</p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Respon Cepat</p>
-            </div>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Klik untuk Chat</p>
+            </a>
 
             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
                 <div class="text-4xl mb-4">📸</div>

@@ -96,9 +96,50 @@
         <main class="p-8 overflow-y-auto">
             @yield('content')
         </main>
-        @livewireScripts
-    </div>
 
+    </div>
+    @if (session('success'))
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform translate-x-8"
+            x-transition:enter-end="opacity-100 transform translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform translate-x-0"
+            x-transition:leave-end="opacity-0 transform translate-x-8"
+            class="fixed top-5 right-5 z-[9999] bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-green-500 min-w-[300px]"
+            style="display: none;">
+            <span class="text-2xl">✅</span>
+            <div class="flex flex-col">
+                <span class="font-bold text-sm">Berhasil!</span>
+                <span class="text-green-100 text-xs">{{ session('success') }}</span>
+            </div>
+            <button @click="show = false" class="ml-auto text-green-200 hover:text-white transition-colors">
+                ✕
+            </button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform translate-x-8"
+            x-transition:enter-end="opacity-100 transform translate-x-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform translate-x-0"
+            x-transition:leave-end="opacity-0 transform translate-x-8"
+            class="fixed top-5 right-5 z-[9999] bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-red-500 min-w-[300px]"
+            style="display: none;">
+            <span class="text-2xl">⚠️</span>
+            <div class="flex flex-col">
+                <span class="font-bold text-sm">Terjadi Kesalahan!</span>
+                <span class="text-red-100 text-xs">{{ session('error') }}</span>
+            </div>
+            <button @click="show = false" class="ml-auto text-red-200 hover:text-white transition-colors">
+                ✕
+            </button>
+        </div>
+    @endif
+    @livewireScripts
 </body>
 
 </html>

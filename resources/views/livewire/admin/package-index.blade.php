@@ -131,11 +131,7 @@ new class extends Component {
         @endif
     </div>
 
-    @if (session('success'))
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
+
 
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">

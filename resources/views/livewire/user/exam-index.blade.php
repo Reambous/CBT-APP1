@@ -44,9 +44,9 @@ new class extends Component {
 
         // 2. LOGIKA FREEMIUM (TASK 3)
         // Jika user bukan premium, saring hanya tampilkan yang is_premium = false
-        if (!$user->is_premium) {
-            $query->where('is_premium', false);
-        }
+        // if (!$user->is_premium) {
+        //     $query->where('is_premium', false);
+        // }
 
         // 3. Eksekusi Query
         $packages = $query->latest()->paginate(10);
@@ -110,6 +110,11 @@ new class extends Component {
                                     class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
                                     💎 Premium
                                 </span>
+                            @else
+                                <span
+                                    class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wider">
+                                    🆓 Gratis
+                                </span>
                             @endif
 
                             <span class="text-gray-500 text-xs font-bold flex items-center gap-1">
@@ -145,10 +150,24 @@ new class extends Component {
                     <div class="w-full md:w-auto flex-shrink-0">
                         <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0 w-full">
                             @csrf
-                            <button type="submit"
-                                class="w-full md:w-36 text-center {{ $recentScores->count() > 0 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
-                                {{ $recentScores->count() > 0 ? '🔄 Ulangi' : '🚀 Mulai' }}
-                            </button>
+
+                            @php
+                                // Cek apakah paket ini premium TAPI usernya bukan premium
+                                $isLocked = $package->is_premium && !auth()->user()->is_premium;
+                            @endphp
+
+                            @if ($isLocked)
+                                <button type="submit"
+                                    class="w-full md:w-36 text-center bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm flex justify-center items-center gap-1">
+                                    🔒 Terkunci
+                                </button>
+                            @else
+                                <button type="submit"
+                                    class="w-full md:w-36 text-center {{ $recentScores->count() > 0 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
+                                    {{ $recentScores->count() > 0 ? '🔄 Ulangi' : '🚀 Mulai' }}
+                                </button>
+                            @endif
+
                         </form>
                     </div>
 
