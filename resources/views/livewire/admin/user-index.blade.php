@@ -160,24 +160,39 @@ new class extends Component {
                         <td class="px-6 py-4 text-center">
                             @if ($item->trashed())
                                 <span
-                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-200">🚫
-                                    BANNED</span>
+                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-200">
+                                    🚫 BANNED
+                                </span>
+                            @elseif ($item->is_premium && $item->premium_until && \Carbon\Carbon::parse($item->premium_until)->isPast())
+                                <span
+                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-200"
+                                    title="Akan otomatis jadi Reguler saat user ini login">
+                                    ❌ KEDALUWARSA
+                                </span>
                             @elseif ($item->is_premium)
                                 <span
-                                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">👑
-                                    PREMIUM</span>
+                                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">
+                                    👑 PREMIUM
+                                </span>
                             @else
                                 <span
-                                    class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">REGULER</span>
+                                    class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
+                                    REGULER
+                                </span>
                             @endif
                         </td>
 
                         <td class="px-6 py-4 text-center">
                             @if ($item->is_premium && $item->premium_until && !$item->trashed())
-                                <div class="text-sm font-bold text-gray-800">
+                                @php
+                                    $isExpired = \Carbon\Carbon::parse($item->premium_until)->isPast();
+                                @endphp
+
+                                <div class="text-sm font-bold {{ $isExpired ? 'text-red-600' : 'text-gray-800' }}">
                                     {{ \Carbon\Carbon::parse($item->premium_until)->format('d M Y') }}
                                 </div>
-                                <div class="text-[10px] text-gray-400 uppercase font-bold">
+                                <div
+                                    class="text-[10px] uppercase font-bold {{ $isExpired ? 'text-red-400' : 'text-gray-400' }}">
                                     ({{ \Carbon\Carbon::parse($item->premium_until)->diffForHumans() }})
                                 </div>
                             @else
