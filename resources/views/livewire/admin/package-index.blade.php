@@ -9,7 +9,8 @@ new class extends Component {
     use WithPagination;
 
     public $search = '';
-    public $categoryFilter = ''; // VARIABEL BARU: Untuk menyimpan ID kategori yang dipilih
+    public $categoryFilter = '';
+    public $tierFilter = ''; // VARIABEL BARU: Menyimpan filter kasta
 
     // VARIABEL BULK DELETE
     public $selected = [];
@@ -22,8 +23,15 @@ new class extends Component {
         $this->selectAll = false;
     }
 
-    // FUNGSI BARU: Reset halaman jika Admin mengganti filter dropdown
     public function updatingCategoryFilter()
+    {
+        $this->resetPage();
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    // FUNGSI BARU: Reset saat filter Kasta diubah
+    public function updatingTierFilter()
     {
         $this->resetPage();
         $this->selected = [];
@@ -37,6 +45,10 @@ new class extends Component {
             $this->selected = ExamPackage::when($this->categoryFilter, function ($q) {
                 $q->where('exam_category_id', $this->categoryFilter);
             })
+                // FILTER KASTA UNTUK SELECT ALL
+                ->when($this->tierFilter, function ($q) {
+                    $q->where('minimum_tier', $this->tierFilter);
+                })
                 ->where(function ($q) {
                     $q->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($sub) {
                         $sub->where('name', 'like', '%' . $this->search . '%');
@@ -69,14 +81,17 @@ new class extends Component {
 
     public function with(): array
     {
-        // LOGIKA FILTER: Gabungkan filter pencarian Teks dan Dropdown Kategori
+        // LOGIKA FILTER: Gabungkan Pencarian, Kategori, dan Kasta
         $packages = ExamPackage::with('examCategory')
+            ->withCount('questions') // Hitung soal juga agar tampil di tabel
             ->when($this->categoryFilter, function ($q) {
-                // Jika dropdown dipilih, saring berdasarkan ID kategori
                 $q->where('exam_category_id', $this->categoryFilter);
             })
+            // LOGIKA KASTA BARU
+            ->when($this->tierFilter, function ($q) {
+                $q->where('minimum_tier', $this->tierFilter);
+            })
             ->when($this->search, function ($q) {
-                // Jika ada teks pencarian
                 $q->where(function ($sub) {
                     $sub->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($c) {
                         $c->where('name', 'like', '%' . $this->search . '%');
@@ -88,7 +103,7 @@ new class extends Component {
 
         return [
             'packages' => $packages,
-            'categories' => ExamCategory::orderBy('name')->get(), // Ambil semua kategori untuk Dropdown
+            'categories' => ExamCategory::orderBy('name')->get(),
         ];
     }
 }; ?>
@@ -103,24 +118,35 @@ new class extends Component {
                     class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm">
             </div>
 
-            <div class="relative w-full max-w-xs md:w-56">
+            <div class="relative w-full max-w-xs md:w-48">
                 <span class="absolute left-3 top-2.5 text-gray-400">📁</span>
                 <select wire:model.live="categoryFilter"
-                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none appearance-none shadow-sm bg-white cursor-pointer">
+                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none appearance-none shadow-sm bg-white cursor-pointer font-medium text-gray-700 text-sm">
                     <option value="">-- Semua Kategori --</option>
                     @foreach ($categories as $cat)
                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                     @endforeach
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                </div>
+            </div>
+
+            <div class="relative w-full max-w-xs md:w-40">
+                <span class="absolute left-3 top-2.5 text-gray-400">🏷️</span>
+                <select wire:model.live="tierFilter"
+                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none appearance-none shadow-sm bg-white cursor-pointer font-medium text-gray-700 text-sm">
+                    <option value="">Semua Kasta</option>
+                    <option value="gratis">🆓 Gratis</option>
+                    <option value="plus">✨ Plus</option>
+                    <option value="pro">👑 Pro</option>
+                    <option value="ultra">🔮 Ultra</option>
+                </select>
             </div>
 
             <div wire:loading class="text-blue-500 text-sm font-semibold animate-pulse">⏳ Memuat...</div>
         </div>
+        <a href="{{ route('admin.packages.create') }}"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors whitespace-nowrap text-sm mt-4 md:mt-0">
+            + Tambah Paket
+        </a>
 
         @if (count($selected) > 0)
             <button wire:click="deleteSelected"
@@ -131,7 +157,11 @@ new class extends Component {
         @endif
     </div>
 
-
+    @if (session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4 rounded font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
 
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -144,7 +174,9 @@ new class extends Component {
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Nama Paket</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Kategori</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Kasta Minimal</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Durasi</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Jumlah Soal</th>
                     <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs">Aksi</th>
                 </tr>
             </thead>
@@ -162,24 +194,52 @@ new class extends Component {
                         <td class="px-6 py-4 font-bold text-gray-900">{{ $package->title }}</td>
                         <td class="px-6 py-4">
                             <span
-                                class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold border border-blue-200">{{ $package->examCategory?->name ?? 'Kategori Dihapus' }}</span>
+                                class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-[10px] font-bold border border-blue-200 whitespace-nowrap uppercase">
+                                {{ $package->examCategory?->name ?? 'Kategori Dihapus' }}
+                            </span>
                         </td>
-                        <td class="px-6 py-4 text-sm font-medium">⏱️ {{ $package->time_limit }} Menit</td>
 
-                        <td class="px-6 py-4 text-right text-sm flex justify-end gap-2">
-                            <a href="{{ route('admin.packages.show', $package->id) }}"
-                                class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1 rounded transition-colors font-bold shadow-sm border border-indigo-200">
-                                ⚙️ Kelola Soal
-                            </a>
-                            <a href="{{ route('admin.packages.edit', $package->id) }}"
-                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors font-bold border border-yellow-200">Edit</a>
-                            <button wire:click="delete({{ $package->id }})" wire:confirm="Hapus paket ini?"
-                                class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded transition-colors font-bold border border-red-200">Hapus</button>
+                        <td class="px-6 py-4 text-center">
+                            @if ($package->minimum_tier == 'ultra')
+                                <span
+                                    class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-[10px] font-bold border border-purple-200 whitespace-nowrap">🔮
+                                    Ultra</span>
+                            @elseif ($package->minimum_tier == 'pro')
+                                <span
+                                    class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-[10px] font-bold border border-yellow-200 whitespace-nowrap">👑
+                                    Pro</span>
+                            @elseif ($package->minimum_tier == 'plus')
+                                <span
+                                    class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-[10px] font-bold border border-blue-200 whitespace-nowrap">✨
+                                    Plus</span>
+                            @else
+                                <span
+                                    class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full text-[10px] font-bold border border-gray-200 whitespace-nowrap">🆓
+                                    Gratis</span>
+                            @endif
+                        </td>
+
+                        <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">⏱️ {{ $package->time_limit }} Menit
+                        </td>
+
+                        <td
+                            class="px-6 py-4 text-center text-sm font-bold {{ $package->questions_count > 0 ? 'text-blue-600' : 'text-gray-400' }}">
+                            {{ $package->questions_count }}
+                        </td>
+
+                        <td class="px-6 py-4 text-right flex justify-end gap-1.5">
+                            <a href="{{ route('admin.packages.show', $package->id) }}" title="Kelola Soal"
+                                class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 p-1.5 rounded border border-indigo-200 text-xs shadow-sm">⚙️</a>
+                            <a href="{{ route('admin.packages.edit', $package->id) }}" title="Edit"
+                                class="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 p-1.5 rounded border border-yellow-200 text-xs shadow-sm">✏️</a>
+                            <button wire:click="delete({{ $package->id }})"
+                                wire:confirm="Yakin ingin menghapus paket ini?" title="Hapus"
+                                class="bg-red-50 text-red-700 hover:bg-red-100 p-1.5 rounded border border-red-200 text-xs shadow-sm">🗑️</button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="text-4xl mb-3">📭</div>
                             <p class="text-gray-500 font-medium">Tidak ada paket ujian yang ditemukan.</p>
                         </td>

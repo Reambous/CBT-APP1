@@ -47,4 +47,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserResult::class);
     }
+
+    public function canAccessTier($requiredTier)
+    {
+        // Beri nilai/skor untuk setiap kasta agar mudah dibandingkan
+        $tiers = [
+            'gratis' => 0,
+            'plus'   => 1,
+            'pro'    => 2,
+            'ultra'  => 3
+        ];
+
+        // Cek dulu, apakah dia sedang premium dan waktunya masih aktif?
+        $isPremiumActive = $this->is_premium && $this->premium_until && now()->lessThanOrEqualTo($this->premium_until);
+
+        // Jika masa aktif habis atau bukan premium, paksa statusnya jadi 'gratis'
+        $userTier = $isPremiumActive ? $this->premium_tier : 'gratis';
+
+        // Kembalikan TRUE jika skor kasta user LEBIH BESAR atau SAMA DENGAN skor kasta yang dibutuhkan paket
+        return $tiers[$userTier] >= $tiers[$requiredTier];
+    }
 }

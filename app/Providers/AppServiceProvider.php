@@ -24,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') !== 'local' || request()->header('X-Forwarded-Proto') === 'https') {
             URL::forceScheme('https');
         }
+        if (str_contains(request()->getHost(), 'ngrok-free.app') || app()->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }

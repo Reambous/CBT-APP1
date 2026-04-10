@@ -58,22 +58,25 @@
                 @enderror
             </div>
 
-            <div class="mb-8 bg-gray-50 p-4 border rounded-lg">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <label class="text-gray-700 font-bold block mb-1">Tipe Paket Ujian</label>
-                        <p class="text-xs text-gray-500">Tentukan apakah paket ini berbayar atau bisa diakses gratis.
-                        </p>
-                    </div>
-
-                    <label class="inline-flex items-center cursor-pointer">
-                        <span class="mr-3 text-sm font-bold text-gray-700">Premium</span>
-                        <input type="checkbox" name="is_premium" class="sr-only peer" value="1" checked>
-                        <div
-                            class="relative w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600">
-                        </div>
-                    </label>
-                </div>
+            <div class="mb-8">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Kasta / Tipe Akses Paket</label>
+                <select name="minimum_tier"
+                    class="w-full px-4 py-3 rounded-lg border focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-gray-50 font-medium text-gray-800"
+                    required>
+                    <option value="gratis" {{ old('minimum_tier') == 'gratis' ? 'selected' : '' }}>🆓 Gratis (Bisa
+                        diakses semua user)</option>
+                    <option value="plus" {{ old('minimum_tier') == 'plus' ? 'selected' : '' }}>✨ Plus (Minimal kasta
+                        Plus)</option>
+                    <option value="pro" {{ old('minimum_tier') == 'pro' ? 'selected' : '' }}>👑 Pro (Minimal kasta
+                        Pro)</option>
+                    <option value="ultra" {{ old('minimum_tier') == 'ultra' ? 'selected' : '' }}>🔮 Ultra (Eksklusif
+                        kasta tertinggi)</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">Pilih batas minimal kasta *membership* yang dibutuhkan untuk
+                    mengakses paket soal ini.</p>
+                @error('minimum_tier')
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <button type="submit"

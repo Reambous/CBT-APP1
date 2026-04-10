@@ -4,22 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExamPackage;
-use App\Models\ExamCategory; // Wajib dipanggil karena kita butuh data kategori
+use App\Models\ExamCategory;
 use Illuminate\Http\Request;
 
 class ExamPackageController extends Controller
 {
     // 1. Tampilkan Daftar Paket Soal
-    // Jangan lupa pastikan 'use Illuminate\Http\Request;' ada di bagian atas file
-
-    public function index(\Illuminate\Http\Request $request)
+    public function index(Request $request)
     {
-        // Tangkap data dari form filter
         $search = $request->input('search');
         $categoryId = $request->input('category_id');
-        $type = $request->input('type'); // Filter baru untuk Freemium
+        $tier = $request->input('minimum_tier'); // Berubah: pakai nama minimum_tier
 
-        $query = \App\Models\ExamPackage::with('examCategory');
+        // PERBAIKAN BUG: Langsung panggil withCount di awal agar filter di bawahnya tidak tertimpa
+        $query = ExamPackage::with('examCategory')->withCount('questions');
 
         // 1. Filter Pencarian Nama
         if ($search) {
@@ -31,27 +29,22 @@ class ExamPackageController extends Controller
             $query->where('exam_category_id', $categoryId);
         }
 
-        // 3. Filter Premium atau Gratis
-        if ($type === 'premium') {
-            $query->where('is_premium', true);
-        } elseif ($type === 'gratis') {
-            $query->where('is_premium', false);
+        // 3. Filter Kasta (Tier) Baru
+        if ($tier) {
+            $query->where('minimum_tier', $tier);
         }
 
-        $query = \App\Models\ExamPackage::with('examCategory')->withCount('questions');
-        // Eksekusi data (withQueryString agar saat pindah halaman, filter tidak hilang)
+        // Eksekusi data
         $packages = $query->latest()->paginate(10)->withQueryString();
+        $categories = ExamCategory::orderBy('name')->get();
 
-        // Ambil data kategori untuk dropdown
-        $categories = \App\Models\ExamCategory::orderBy('name')->get();
-
-        return view('admin.packages.index', compact('packages', 'categories', 'search', 'categoryId', 'type'));
+        // Mengirim $tier ke view menggantikan $type
+        return view('admin.packages.index', compact('packages', 'categories', 'search', 'categoryId', 'tier'));
     }
 
     // 2. Tampilkan Form Tambah
     public function create()
     {
-        // Ambil semua kategori untuk ditampilkan di dalam <select> dropdown
         $categories = ExamCategory::all();
         return view('admin.packages.create', compact('categories'));
     }
@@ -63,45 +56,41 @@ class ExamPackageController extends Controller
             'exam_category_id' => 'required|exists:exam_categories,id',
             'title' => 'required|string|max:255',
             'time_limit' => 'required|integer|min:1',
+            'minimum_tier' => 'required|in:gratis,plus,pro,ultra',
         ]);
 
-        // Tangkap status checkbox: Jika dicentang bernilai true, jika tidak bernilai false
-        $validated['is_premium'] = $request->has('is_premium');
-
-        \App\Models\ExamPackage::create($validated);
+        // LANGSUNG SIMPAN: Tidak perlu lagi memanipulasi is_premium
+        ExamPackage::create($validated);
 
         return redirect()->route('admin.packages.index')->with('success', 'Paket ujian berhasil ditambahkan.');
     }
 
     public function show(string $id)
     {
-        // Cari paket berdasarkan ID, sekalian ambil data kategori dan soal-soalnya
         $package = ExamPackage::with(['examCategory', 'questions'])->findOrFail($id);
-
-        // Buka halaman Ruang Kelola Soal
         return view('admin.packages.show', compact('package'));
     }
+
     // 4. Tampilkan Form Edit
     public function edit(ExamPackage $package)
     {
-        $categories = ExamCategory::all(); // Butuh data kategori untuk dropdown
+        $categories = ExamCategory::all();
         return view('admin.packages.edit', compact('package', 'categories'));
     }
 
     // 5. Update Data di Database
     public function update(Request $request, $id)
     {
-        $package = \App\Models\ExamPackage::findOrFail($id);
+        $package = ExamPackage::findOrFail($id);
 
         $validated = $request->validate([
             'exam_category_id' => 'required|exists:exam_categories,id',
             'title' => 'required|string|max:255',
             'time_limit' => 'required|integer|min:1',
+            'minimum_tier' => 'required|in:gratis,plus,pro,ultra',
         ]);
 
-        // Tangkap status saklar saat diedit (jika dicentang = true, jika mati = false)
-        $validated['is_premium'] = $request->has('is_premium');
-
+        // LANGSUNG UPDATE: Tidak perlu lagi memanipulasi is_premium
         $package->update($validated);
 
         return redirect()->route('admin.packages.index')->with('success', 'Paket ujian berhasil diperbarui.');

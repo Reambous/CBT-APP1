@@ -21,6 +21,7 @@ return new class extends Migration
             // Fitur khusus CBT-APP
             $table->string('profile_picture')->nullable(); // Foto profil user
             $table->boolean('is_premium')->default(false); // Status awal: Gratis
+            $table->enum('premium_tier', ['gratis', 'plus', 'pro', 'ultra'])->default('gratis');
             $table->timestamp('premium_until')->nullable(); // Batas kedaluwarsa 1 tahun
 
             $table->rememberToken();
