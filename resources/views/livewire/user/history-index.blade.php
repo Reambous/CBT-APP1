@@ -11,7 +11,7 @@ new class extends Component {
 
     public $search = '';
     public $selectedCategory = '';
-    public $selectedTier = ''; // VARIABEL BARU UNTUK FILTER KASTA
+    public $selectedTier = '';
 
     public function updatingSearch()
     {
@@ -21,7 +21,6 @@ new class extends Component {
     {
         $this->resetPage();
     }
-    // RESET PAGE KETIKA FILTER KASTA BERUBAH
     public function updatingSelectedTier()
     {
         $this->resetPage();
@@ -31,8 +30,7 @@ new class extends Component {
     {
         $user = Auth::user();
 
-        // 1. Tentukan Kasta (Tier) apa saja yang boleh dilihat oleh user ini
-        $allowedTiers = ['gratis']; // Default: Reguler hanya boleh lihat 'gratis'
+        $allowedTiers = ['gratis'];
 
         $isPremiumActive = $user->is_premium && $user->premium_until && now()->lessThanOrEqualTo($user->premium_until);
 
@@ -46,23 +44,19 @@ new class extends Component {
             }
         }
 
-        // 2. Buat Query Dasar dengan Filter Kasta Hak Akses
         $query = UserResult::with(['examPackage.examCategory'])
             ->where('user_id', $user->id)
             ->whereNotNull('finished_at')
             ->whereHas('examPackage', function ($q) use ($allowedTiers) {
-                // HANYA tampilkan riwayat dari paket ujian yang sesuai kasta user
                 $q->whereIn('minimum_tier', $allowedTiers);
             });
 
-        // 3. Filter Pencarian & Kategori
         if ($this->selectedCategory) {
             $query->whereHas('examPackage', function ($q) {
                 $q->where('exam_category_id', $this->selectedCategory);
             });
         }
 
-        // FILTER BARU: Filter Berdasarkan Kasta yang Dipilih User
         if ($this->selectedTier) {
             $query->whereHas('examPackage', function ($q) {
                 $q->where('minimum_tier', $this->selectedTier);
@@ -77,7 +71,6 @@ new class extends Component {
             });
         }
 
-        // 4. Hitung Statistik berdasarkan data yang BOLEH dia lihat saja
         $totalExams = (clone $query)->count();
         $averageScore = (clone $query)->avg('score') ?? 0;
 
@@ -87,29 +80,12 @@ new class extends Component {
             'totalExams' => $totalExams,
             'averageScore' => $averageScore,
             'isPremiumActive' => $isPremiumActive,
-            'allowedTiers' => $allowedTiers, // Kirim allowedTiers ke view untuk dropdown
+            'allowedTiers' => $allowedTiers,
         ];
     }
 }; ?>
 
 <div>
-    @if (auth()->user()->premium_tier !== 'ultra')
-        <div
-            class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 mb-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-                <h3 class="text-lg font-bold flex items-center gap-2">
-                    <span>🚀</span> Ingin akses penuh ke semua riwayat & pembahasan?
-                </h3>
-                <p class="text-blue-100 text-sm mt-1">Beberapa riwayat ujian kasta tinggi (Pro/Ultra) Anda mungkin
-                    disembunyikan. Upgrade sekarang untuk membukanya!</p>
-            </div>
-            <a href="{{ route('user.upgrade') ?? '#' }}"
-                class="bg-white text-blue-700 hover:bg-blue-50 font-black px-6 py-2.5 rounded-lg text-sm transition shadow-md whitespace-nowrap">
-                👑 Upgrade Premium
-            </a>
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-t-4 border-t-blue-500">
             <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Diselesaikan (Sesuai Kasta)</h3>
@@ -128,7 +104,6 @@ new class extends Component {
         <h2 class="text-xl font-bold text-gray-800">📈 Daftar Rekam Jejak Ujian</h2>
 
         <div class="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
-
             <select wire:model.live="selectedCategory"
                 class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium text-sm w-full md:w-auto">
                 <option value="">Semua Kategori</option>
