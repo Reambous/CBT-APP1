@@ -24,7 +24,7 @@
                         <h3 class="text-xl font-bold text-gray-900 mt-4 mb-1">Paket Dasar</h3>
                         <div class="flex items-baseline gap-1">
                             <span class="text-3xl font-black text-gray-900">Rp 50.000</span>
-                            <span class="text-gray-500 font-medium text-sm">/bln</span>
+                            <span class="text-gray-500 font-medium text-sm">/tahun</span>
                         </div>
                     </div>
                     <div class="p-6 grow">
@@ -58,7 +58,7 @@
                         <h3 class="text-xl font-bold text-gray-900 mt-4 mb-1">Paket Intensif</h3>
                         <div class="flex items-baseline gap-1">
                             <span class="text-3xl font-black text-gray-900">Rp 99.000</span>
-                            <span class="text-gray-500 font-medium text-sm">/bln</span>
+                            <span class="text-gray-500 font-medium text-sm">/tahun</span>
                         </div>
                     </div>
                     <div class="p-6 grow">
@@ -95,7 +95,7 @@
                         <h3 class="text-xl font-bold text-white mt-4 mb-1">Paket Sultan</h3>
                         <div class="flex items-baseline gap-1">
                             <span class="text-3xl font-black text-white">Rp 199.000</span>
-                            <span class="text-gray-400 font-medium text-sm">/bln</span>
+                            <span class="text-gray-400 font-medium text-sm">/tahun</span>
                         </div>
                     </div>
                     <div class="p-6 grow">

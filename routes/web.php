@@ -52,6 +52,7 @@ Route::middleware('auth:web')->group(function () {
     Route::post('/checkout', [UserDashboardController::class, 'checkout'])->name('user.checkout');
     // Rute untuk menampilkan halaman tagihan
     Route::get('/invoice/{id}', [UserDashboardController::class, 'invoice'])->name('user.invoice');
+    Route::post('/invoice/{id}/cancel', [UserDashboardController::class, 'cancelInvoice'])->name('user.invoice.cancel');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')

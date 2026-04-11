@@ -101,57 +101,65 @@ class UserDashboardController extends Controller
     // FITUR BARU: CHECKOUT & INVOICE
     // =========================================================
 
-    // PROSES PEMBUATAN TRANSAKSI
-    // =========================================================
-    // FITUR BARU: CHECKOUT & INVOICE
-    // =========================================================
-
-    // PROSES PEMBUATAN TRANSAKSI
     public function checkout(Request $request)
     {
-        // PENGAMAN: Jika tiba-tiba sesi login habis
-        if (!$request->user()) {
-            return redirect()->route('login');
+        if (!$request->user()) return redirect()->route('login');
+
+        $request->validate(['tier' => 'required|in:plus,pro,ultra']);
+        $user = $request->user();
+
+        // 1. SATPAM ANTI-SPAM: Cek apakah ada tagihan pending?
+        $pendingTx = \App\Models\Transaction::where('user_id', $user->id)->where('status', 'pending')->first();
+        if ($pendingTx) {
+            return redirect()->route('user.invoice', $pendingTx->id)
+                ->with('error', '⚠️ Anda masih memiliki tagihan yang belum diselesaikan. Selesaikan atau batalkan tagihan ini terlebih dahulu.');
         }
 
-        $request->validate([
-            'tier' => 'required|in:plus,pro,ultra'
-        ]);
+        // 2. SATPAM ANTI-DOWNGRADE: Cek kasta saat ini
+        $tierWeights = ['gratis' => 0, 'plus' => 1, 'pro' => 2, 'ultra' => 3];
+        $currentTier = $user->is_premium ? ($user->premium_tier ?? 'gratis') : 'gratis';
 
-        // Tentukan harga berdasarkan kasta
-        $prices = [
-            'plus' => 50000,
-            'pro' => 99000,
-            'ultra' => 199000
-        ];
+        if ($tierWeights[$request->tier] < $tierWeights[$currentTier] && $user->is_premium && now()->lessThan($user->premium_until)) {
+            return back()->with('error', '⛔ Anda tidak bisa turun ke paket ' . strtoupper($request->tier) . ' karena Anda masih memiliki paket ' . strtoupper($currentTier) . ' aktif.');
+        }
 
-        // Buat record transaksi di database dengan status pending
-        $transaction = Transaction::create([
-            'user_id' => $request->user()->id, // MENGGUNAKAN $request AGAR AMAN
+        // 3. Lolos Satpam -> Buat Transaksi
+        $prices = ['plus' => 50000, 'pro' => 99000, 'ultra' => 199000];
+        $transaction = \App\Models\Transaction::create([
+            'user_id' => $user->id,
             'amount' => $prices[$request->tier],
             'status' => 'pending',
         ]);
 
-        // Lempar user ke halaman tagihan
         return redirect()->route('user.invoice', $transaction->id)->with('success', 'Pesanan berhasil dibuat! Selesaikan pembayaran Anda.');
     }
 
-    // TAMPILKAN HALAMAN TAGIHAN
-    public function invoice(Request $request, $id) // WAJIB TAMBAHKAN 'Request $request' DI SINI
+    public function invoice(Request $request, $id)
     {
-        // PENGAMAN: Jika tiba-tiba sesi login habis
-        if (!$request->user()) {
-            return redirect()->route('login');
+        if (!$request->user()) return redirect()->route('login');
+
+        try {
+            $transaction = \App\Models\Transaction::where('user_id', $request->user()->id)->findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Jika tagihan tidak ketemu (karena sudah ditolak/dihapus Admin)
+            return redirect()->route('user.upgrade')->with('error', 'Tagihan tidak ditemukan atau telah ditolak oleh Admin. Silakan buat pesanan baru.');
         }
 
-        // Cari transaksi milik user ini (menggunakan $request)
-        $transaction = Transaction::where('user_id', $request->user()->id)->findOrFail($id);
-
-        // Tentukan nama paket berdasarkan harga (untuk tampilan di invoice)
         $tierName = 'Paket PLUS';
         if ($transaction->amount == 99000) $tierName = 'Paket PRO';
         if ($transaction->amount == 199000) $tierName = 'Paket ULTRA';
 
         return view('user.invoice', compact('transaction', 'tierName'));
+    }
+
+    // FITUR BARU: BATALKAN TAGIHAN
+    public function cancelInvoice(Request $request, $id)
+    {
+        $transaction = \App\Models\Transaction::where('user_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->findOrFail($id);
+
+        $transaction->delete(); // Atau ubah statusnya jadi 'failed' / 'cancelled'
+        return redirect()->route('user.upgrade')->with('success', 'Tagihan sebelumnya berhasil dibatalkan. Silakan pilih paket baru.');
     }
 }
