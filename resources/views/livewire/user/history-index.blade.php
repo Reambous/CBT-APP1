@@ -11,12 +11,18 @@ new class extends Component {
 
     public $search = '';
     public $selectedCategory = '';
+    public $selectedTier = ''; // VARIABEL BARU UNTUK FILTER KASTA
 
     public function updatingSearch()
     {
         $this->resetPage();
     }
     public function updatingSelectedCategory()
+    {
+        $this->resetPage();
+    }
+    // RESET PAGE KETIKA FILTER KASTA BERUBAH
+    public function updatingSelectedTier()
     {
         $this->resetPage();
     }
@@ -40,7 +46,7 @@ new class extends Component {
             }
         }
 
-        // 2. Buat Query Dasar dengan Filter Kasta
+        // 2. Buat Query Dasar dengan Filter Kasta Hak Akses
         $query = UserResult::with(['examPackage.examCategory'])
             ->where('user_id', $user->id)
             ->whereNotNull('finished_at')
@@ -53,6 +59,13 @@ new class extends Component {
         if ($this->selectedCategory) {
             $query->whereHas('examPackage', function ($q) {
                 $q->where('exam_category_id', $this->selectedCategory);
+            });
+        }
+
+        // FILTER BARU: Filter Berdasarkan Kasta yang Dipilih User
+        if ($this->selectedTier) {
+            $query->whereHas('examPackage', function ($q) {
+                $q->where('minimum_tier', $this->selectedTier);
             });
         }
 
@@ -74,6 +87,7 @@ new class extends Component {
             'totalExams' => $totalExams,
             'averageScore' => $averageScore,
             'isPremiumActive' => $isPremiumActive,
+            'allowedTiers' => $allowedTiers, // Kirim allowedTiers ke view untuk dropdown
         ];
     }
 }; ?>
@@ -110,17 +124,37 @@ new class extends Component {
         </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
         <h2 class="text-xl font-bold text-gray-800">📈 Daftar Rekam Jejak Ujian</h2>
-        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+
+        <div class="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
+
             <select wire:model.live="selectedCategory"
-                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium text-sm">
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium text-sm w-full md:w-auto">
                 <option value="">Semua Kategori</option>
                 @foreach ($categories as $category)
                     <option value="{{ $category->id }}">{{ $category->name }}</option>
                 @endforeach
             </select>
-            <div class="relative w-full sm:w-64">
+
+            <select wire:model.live="selectedTier"
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium text-sm w-full md:w-auto">
+                <option value="">Semua Kasta</option>
+                @if (in_array('gratis', $allowedTiers))
+                    <option value="gratis">🆓 Gratis</option>
+                @endif
+                @if (in_array('plus', $allowedTiers))
+                    <option value="plus">✨ Plus</option>
+                @endif
+                @if (in_array('pro', $allowedTiers))
+                    <option value="pro">👑 Pro</option>
+                @endif
+                @if (in_array('ultra', $allowedTiers))
+                    <option value="ultra">🔮 Ultra</option>
+                @endif
+            </select>
+
+            <div class="relative w-full md:w-64 flex-shrink-0">
                 <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
                 <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama ujian..."
                     class="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm text-sm">
