@@ -13,7 +13,7 @@
             pointer-events: none;
             z-index: 9999;
             opacity: 0.05;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='180px' width='280px'><text transform='translate(10, 140) rotate(-35)' fill='rgb(0,0,0)' font-size='24' font-weight='900' font-family='Arial, sans-serif' opacity='0.8'>UKAICHAMPION</text></svg>");
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='180px' width='280px'><text transform='translate(10, 140) rotate(-35)' fill='rgb(0,0,0)' font-size='24' font-weight='900' font-family='Arial, sans-serif' opacity='0.6'>UKAICHAMPION</text></svg>");
             background-repeat: repeat;
             user-select: none;
         }

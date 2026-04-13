@@ -10,7 +10,7 @@ new class extends Component {
 
     public $search = '';
     public $categoryFilter = '';
-    public $tierFilter = ''; // VARIABEL BARU: Menyimpan filter kasta
+    public $tierFilter = ''; // VARIABEL BARU: Menyimpan filter Paket
 
     // VARIABEL BULK DELETE
     public $selected = [];
@@ -30,7 +30,7 @@ new class extends Component {
         $this->selectAll = false;
     }
 
-    // FUNGSI BARU: Reset saat filter Kasta diubah
+    // FUNGSI BARU: Reset saat filter Paket diubah
     public function updatingTierFilter()
     {
         $this->resetPage();
@@ -45,7 +45,7 @@ new class extends Component {
             $this->selected = ExamPackage::when($this->categoryFilter, function ($q) {
                 $q->where('exam_category_id', $this->categoryFilter);
             })
-                // FILTER KASTA UNTUK SELECT ALL
+                // FILTER Paket UNTUK SELECT ALL
                 ->when($this->tierFilter, function ($q) {
                     $q->where('minimum_tier', $this->tierFilter);
                 })
@@ -81,13 +81,13 @@ new class extends Component {
 
     public function with(): array
     {
-        // LOGIKA FILTER: Gabungkan Pencarian, Kategori, dan Kasta
+        // LOGIKA FILTER: Gabungkan Pencarian, Kategori, dan Paket
         $packages = ExamPackage::with('examCategory')
             ->withCount('questions') // Hitung soal juga agar tampil di tabel
             ->when($this->categoryFilter, function ($q) {
                 $q->where('exam_category_id', $this->categoryFilter);
             })
-            // LOGIKA KASTA BARU
+            // LOGIKA Paket BARU
             ->when($this->tierFilter, function ($q) {
                 $q->where('minimum_tier', $this->tierFilter);
             })
@@ -133,7 +133,7 @@ new class extends Component {
                 <span class="absolute left-3 top-2.5 text-gray-400">🏷️</span>
                 <select wire:model.live="tierFilter"
                     class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none appearance-none shadow-sm bg-white cursor-pointer font-medium text-gray-700 text-sm">
-                    <option value="">Semua Kasta</option>
+                    <option value="">Semua Paket</option>
                     <option value="gratis">🆓 Gratis</option>
                     <option value="plus">✨ Plus</option>
                     <option value="pro">👑 Pro</option>
@@ -174,7 +174,7 @@ new class extends Component {
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Nama Paket</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Kategori</th>
-                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Kasta Minimal</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Paket Minimal</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Durasi</th>
                     <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Jumlah Soal</th>
                     <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs">Aksi</th>

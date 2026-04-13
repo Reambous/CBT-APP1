@@ -88,7 +88,7 @@ new class extends Component {
 <div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-t-4 border-t-blue-500">
-            <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Diselesaikan (Sesuai Kasta)</h3>
+            <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Diselesaikan (Sesuai Paket)</h3>
             <p class="text-4xl font-extrabold text-gray-800 mt-2">{{ $totalExams }} <span
                     class="text-lg font-medium text-gray-500">paket</span></p>
         </div>
@@ -114,7 +114,7 @@ new class extends Component {
 
             <select wire:model.live="selectedTier"
                 class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium text-sm w-full md:w-auto">
-                <option value="">Semua Kasta</option>
+                <option value="">Semua Paket</option>
                 @if (in_array('gratis', $allowedTiers))
                     <option value="gratis">🆓 Gratis</option>
                 @endif
@@ -144,7 +144,7 @@ new class extends Component {
                     <tr>
                         <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                         <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Informasi Ujian</th>
-                        <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Kasta</th>
+                        <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Paket</th>
                         <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Waktu Selesai</th>
                         <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Skor</th>
                         <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs w-48">Aksi</th>

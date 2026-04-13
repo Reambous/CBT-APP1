@@ -108,7 +108,7 @@ new class extends Component {
                     </th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Informasi User</th>
-                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Status Kasta</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Status Paket</th>
                     <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Masa Aktif</th>
                     <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs">Aksi</th>
                 </tr>

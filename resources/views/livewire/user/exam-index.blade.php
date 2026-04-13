@@ -12,7 +12,7 @@ new class extends Component {
 
     public $search = '';
     public $selectedCategory = '';
-    public $selectedTier = ''; // FILTER BARU: Untuk kasta/tipe paket
+    public $selectedTier = ''; // FILTER BARU: Untuk Paket/tipe paket
 
     public function updatingSearch()
     {
@@ -42,7 +42,7 @@ new class extends Component {
             ->when($this->selectedCategory, function ($q) {
                 $q->where('exam_category_id', $this->selectedCategory);
             })
-            // FILTER KASTA BARU
+            // FILTER Paket BARU
             ->when($this->selectedTier, function ($q) {
                 $q->where('minimum_tier', $this->selectedTier);
             })
@@ -84,7 +84,7 @@ new class extends Component {
 
             <select wire:model.live="selectedTier"
                 class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium w-full sm:w-auto">
-                <option value="">Semua Kasta</option>
+                <option value="">Semua Paket</option>
                 <option value="gratis">🆓 Gratis</option>
                 <option value="plus">✨ Plus</option>
                 <option value="pro">👑 Pro</option>
@@ -241,7 +241,7 @@ new class extends Component {
     </div>
 
     <script>
-        // Data Harga untuk masing-masing kasta (Sesuaikan dengan harga di upgrade.blade.php)
+        // Data Harga untuk masing-masing Paket (Sesuaikan dengan harga di upgrade.blade.php)
         const tierData = {
             'plus': {
                 name: '✨ Paket PLUS',
