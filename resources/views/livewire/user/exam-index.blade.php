@@ -168,6 +168,10 @@ new class extends Component {
                     <div class="w-full md:w-auto flex-shrink-0">
                         @php
                             $isLocked = !auth()->user()->canAccessTier($package->minimum_tier);
+                            $hasFinished = $recentScores->count() > 0;
+
+                            // Logika baru: Jika paket gratis dan sudah ada nilai, maka limit tercapai
+                            $isFreeLimitReached = $package->minimum_tier == 'gratis' && $hasFinished;
                         @endphp
 
                         @if ($isLocked)
@@ -175,13 +179,18 @@ new class extends Component {
                                 class="w-full md:w-36 inline-flex justify-center items-center bg-gray-100 text-gray-500 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm gap-1 cursor-pointer">
                                 🔒 Terkunci
                             </button>
+                        @elseif ($isFreeLimitReached)
+                            <button type="button" disabled
+                                class="w-full md:w-36 inline-flex justify-center items-center bg-gray-200 text-gray-500 border border-transparent font-bold py-2 px-4 rounded-lg cursor-not-allowed shadow-sm text-sm gap-1">
+                                ✅ Selesai
+                            </button>
                         @else
                             <form action="{{ route('exam.start', $package->id) }}" method="POST"
                                 class="m-0 p-0 w-full">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full md:w-36 text-center {{ $recentScores->count() > 0 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
-                                    {{ $recentScores->count() > 0 ? '🔄 Ulangi' : '🚀 Mulai' }}
+                                    class="w-full md:w-36 text-center {{ $hasFinished ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
+                                    {{ $hasFinished ? '🔄 Ulangi' : '🚀 Mulai' }}
                                 </button>
                             </form>
                         @endif

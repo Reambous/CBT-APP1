@@ -145,7 +145,7 @@ new class extends Component {
                         <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                         <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Informasi Ujian</th>
                         <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Paket</th>
-                        <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Waktu Selesai</th>
+                        <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Waktu & Durasi</th>
                         <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Skor</th>
                         <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs w-48">Aksi</th>
                     </tr>
@@ -194,8 +194,29 @@ new class extends Component {
                             <td class="px-6 py-4 text-center">
                                 <div class="text-sm font-semibold text-gray-700">
                                     {{ \Carbon\Carbon::parse($history->finished_at)->format('d M Y') }}</div>
-                                <div class="text-xs text-gray-500">
+                                <div class="text-xs text-gray-500 mb-1">
                                     {{ \Carbon\Carbon::parse($history->finished_at)->format('H:i') }} WIB</div>
+
+                                {{-- PERHITUNGAN DURASI --}}
+                                {{-- PERHITUNGAN DURASI --}}
+                                @php
+                                    $waktuMulai = \Carbon\Carbon::parse($history->created_at);
+                                    $waktuSelesai = \Carbon\Carbon::parse($history->finished_at);
+
+                                    // Cari total detiknya dulu biar presisi
+                                    $totalDetik = $waktuMulai->diffInSeconds($waktuSelesai);
+
+                                    // Dibagi 60 dan dibulatkan ke bawah untuk dapat Menit yang pas
+                                    $menit = floor($totalDetik / 60);
+
+                                    // Sisa detiknya
+                                    $detik = $totalDetik % 60;
+                                @endphp
+
+                                <div
+                                    class="inline-block bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
+                                    ⏱️ {{ $menit }}m {{ $detik }}s
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <span

@@ -133,10 +133,7 @@ new class extends Component {
                 </button>
             @endif
 
-            <a href="{{ route('admin.questions.create', ['package_id' => $package->id]) }}"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2 text-sm">
-                ➕ Tambah Manual
-            </a>
+
         </div>
 
     </div>

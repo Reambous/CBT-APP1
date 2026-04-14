@@ -13,42 +13,52 @@ class ExamController extends Controller
     // Fungsi saat tombol "Mulai Kerjakan" ditekan
     public function startExam($package_id)
     {
-        // KUNCI PERBAIKAN: Ambil data user langsung dari tabel Database 
-        // menggunakan ID orang yang sedang login. Datanya pasti yang paling baru (fresh)!
         $user = \App\Models\User::find(Auth::id());
 
         // 1. AMBIL DATA PAKET TERLEBIH DAHULU
         $package = ExamPackage::withCount('questions')->findOrFail($package_id);
 
-        // 2. CEK SOAL KOSONG: Jangan mulai jika paket belum ada soalnya
+        // 2. CEK SOAL KOSONG
         if ($package->questions_count == 0) {
             return redirect()->route('user.exams')
                 ->with('error', 'Paket ujian ini belum memiliki soal.');
         }
 
-        // 3. CEK AKSES PREMIUM (Satu pesan error seragam untuk semua)
+        // 3. CEK AKSES PREMIUM
         if ($package->is_premium && !$user->is_premium) {
             return redirect()->route('user.exams')
                 ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk membuka ujian ini.');
         }
 
-        // 4. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa
+        // --- MULAI PERUBAHAN SATPAM PINTU BELAKANG ---
+
+        // 4. CEK ATTEMPT & LIMIT GRATIS
+        // Kita cek apakah user sudah pernah menyelesaikan paket ini sebelumnya
         $lastAttempt = UserResult::where('user_id', $user->id)
             ->where('exam_package_id', $package_id)
+            ->whereNotNull('finished_at') // Kita hitung yang sudah selesai saja
             ->max('attempt_number');
+
+        // JIKA PAKET GRATIS DAN SUDAH PERNAH MENGERJAKAN (Attempt >= 1)
+        if ($package->minimum_tier == 'gratis' && $lastAttempt >= 1) {
+            return redirect()->route('user.exams')
+                ->with('error', 'Maaf, paket gratis hanya bisa dikerjakan 1 kali. Silakan upgrade ke Premium untuk pengerjaan tanpa batas!');
+        }
+
+        // --- SELESAI PERUBAHAN ---
 
         $currentAttempt = $lastAttempt ? $lastAttempt + 1 : 1;
 
-        // 5. BUAT KERTAS UJIAN: Catat ke tabel USER_RESULTS
+        // 5. BUAT KERTAS UJIAN
         $result = UserResult::create([
             'user_id'         => $user->id,
             'exam_package_id' => $package_id,
             'attempt_number'  => $currentAttempt,
-            'score'           => 0, // Nilai awal 0
-            'finished_at'     => null, // Null menandakan ujian sedang berlangsung
+            'score'           => 0,
+            'finished_at'     => null,
         ]);
 
-        // 6. Arahkan ke Halaman Livewire Ujian yang sesungguhnya
+        // 6. Arahkan ke Halaman Livewire Ujian
         return redirect()->route('exam.play', $result->id);
     }
 
