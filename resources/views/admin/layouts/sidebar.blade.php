@@ -11,54 +11,72 @@
     @livewireStyles
 </head>
 
-<body class="bg-gray-100 flex min-h-screen">
+<body class="bg-gray-100 flex flex-col md:flex-row h-screen" x-data="{ sidebarOpen: false }">
 
-    <div class="w-64 bg-gray-900 text-white flex flex-col shadow-xl min-h-screen">
-        <div class="p-6 text-center border-b border-gray-800">
-            <h2 class="text-2xl font-extrabold text-red-500">UKAICHAMPIONS</h2>
+    <div class="w-full md:w-64 bg-gray-900 text-white flex flex-col shadow-xl flex-shrink-0 z-50">
+
+        <div class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
+            <h2 class="text-xl md:text-2xl font-extrabold text-red-500">UKAICHAMPIONS</h2>
+
+            <button @click="sidebarOpen = !sidebarOpen"
+                class="md:hidden bg-gray-800 hover:bg-gray-700 p-2 rounded-lg focus:outline-none transition-colors">
+                <svg x-show="!sidebarOpen" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+                <svg x-show="sidebarOpen" style="display: none;" class="w-6 h-6 text-gray-300" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
         </div>
-        <div class="grow p-4">
-            <a href="{{ route('admin.dashboard') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                📊 Dashboard
-            </a>
 
-            <a href="{{ route('admin.categories.index') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.categories.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                📚 Kategori Soal
-            </a>
+        <div :class="sidebarOpen ? 'flex' : 'hidden'" class="md:flex flex-col grow bg-gray-900 w-full overflow-y-auto">
+            <div class="grow p-4">
+                <a href="{{ route('admin.dashboard') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    📊 Dashboard
+                </a>
 
-            <a href="{{ route('admin.packages.index') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.packages.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                📦 Paket Ujian
-            </a>
+                <a href="{{ route('admin.categories.index') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.categories.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    📚 Kategori Soal
+                </a>
 
-            <a href="{{ route('admin.users.index') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                👥 Manajemen User
-            </a>
+                <a href="{{ route('admin.packages.index') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.packages.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    📦 Paket Ujian
+                </a>
 
-            <a href="{{ route('admin.transactions') }}"
-                class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.transactions') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                💳 Transaksi Premium
-            </a>
+                <a href="{{ route('admin.users.index') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    👥 Manajemen User
+                </a>
 
-        </div>
-        <div class="p-4 border-t border-gray-800">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit"
-                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">Logout</button>
-            </form>
+                <a href="{{ route('admin.transactions') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.transactions') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    💳 Transaksi Premium
+                </a>
+            </div>
+            <div class="p-4 border-t border-gray-800">
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors">Logout</button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden relative z-0">
 
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center border-b border-gray-200 z-10">
-            <h2 class="text-xl font-bold text-gray-800">Control Panel</h2>
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center border-b border-gray-200 shrink-0">
+            <h2 class="text-xl font-bold text-gray-800 hidden sm:block">Control Panel</h2>
+            <h2 class="text-lg font-bold text-gray-800 sm:hidden">Halo, Admin!</h2>
 
-            <div x-data="{ open: false }" class="relative">
+            <div x-data="{ open: false }" class="relative ml-auto">
                 <button @click="open = !open"
                     class="flex items-center gap-3 hover:bg-gray-50 p-1 rounded-lg transition">
                     <span class="text-gray-600 font-bold hidden md:block">{{ auth('admin')->user()->name }}</span>
@@ -72,9 +90,10 @@
                             {{ substr(auth('admin')->user()->name, 0, 1) }}
                         </div>
                     @endif
+                    <span class="text-gray-400 text-xs">▼</span>
                 </button>
 
-                <div x-show="open" @click.away="open = false"
+                <div x-show="open" @click.away="open = false" style="display: none;"
                     class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
                     <div class="px-4 py-2 text-xs text-gray-400 font-black uppercase tracking-widest">Opsi Admin</div>
                     <a href="{{ route('admin.profile') }}"
@@ -93,11 +112,12 @@
             </div>
         </header>
 
-        <main class="p-8 overflow-y-auto">
+        <main class="p-4 md:p-8 overflow-y-auto grow">
             @yield('content')
         </main>
 
     </div>
+
     @if (session('success'))
         <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show"
             x-transition:enter="transition ease-out duration-300"

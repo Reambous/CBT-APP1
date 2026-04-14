@@ -68,3 +68,24 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
     Route::get('/admin/transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'transactions'])->name('admin.transactions');
 });
+
+// ==========================================
+// ⚠️ ROUTE KHUSUS TESTING K6 (HAPUS SAAT RILIS)
+// ==========================================
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
+Route::get('/k6-bypass/{id}', function ($id) {
+    if (app()->environment('local')) {
+        // Cek apakah user dengan ID tersebut benar-benar ada
+        $user = User::find($id);
+
+        if (!$user) {
+            return response("Gagal: User dengan ID $id tidak ditemukan. Cek tabel users kamu.", 404);
+        }
+
+        Auth::login($user);
+        return response("Berhasil login sebagai: " . $user->email, 200);
+    }
+    abort(404);
+});
