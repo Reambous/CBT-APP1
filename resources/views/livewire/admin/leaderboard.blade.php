@@ -93,6 +93,8 @@ new class extends Component {
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Nama Siswa</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase">Paket</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Skor</th>
+                        {{-- TAMBAHAN: Header Durasi --}}
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Durasi</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Tanggal</th>
                     </tr>
                 </thead>
@@ -119,13 +121,28 @@ new class extends Component {
                                 class="px-6 py-4 text-center font-black text-xl {{ $res->score >= 70 ? 'text-green-600' : 'text-red-500' }}">
                                 {{ number_format($res->score, 1) }}
                             </td>
+                            {{-- TAMBAHAN: Kolom Menghitung Durasi --}}
+                            {{-- TAMBAHAN: Kolom Menghitung Durasi --}}
+                            <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">
+                                @php
+                                    // Menggunakan objek DateInterval bawaan PHP yang jauh lebih akurat
+                                    $diff = $res->created_at->diff($res->finished_at);
+
+                                    // Jika durasi mencapai 1 jam atau lebih, tampilkan 'j' (Jam)
+                                    $hours = $diff->h > 0 ? $diff->h . 'j ' : '';
+                                @endphp
+                                <span class="bg-gray-100 px-2 py-1 rounded border border-gray-200 whitespace-nowrap">
+                                    ⏱️ {{ $hours }}{{ $diff->i }}m {{ $diff->s }}s
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-right text-xs text-gray-500">
                                 {{ $res->finished_at->format('d M Y, H:i') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data
+                            {{-- TAMBAHAN: Colspan diubah dari 5 menjadi 6 karena ketambahan 1 kolom baru --}}
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data
                                 pengerjaan ujian.</td>
                         </tr>
                     @endforelse

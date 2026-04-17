@@ -46,7 +46,9 @@
                 <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold"></p>
             </a>
 
-            <a href="https://tiktok.com/@{{ env('CBT_ADMIN_TIKTOK') }}" target="_blank"
+            {{-- PERBAIKAN TIKTOK: Menghapus '@' agar tidak bentrok dengan isi .env --}}
+            <a href="https://www.tiktok.com/{{ Str::startsWith(env('CBT_ADMIN_TIKTOK'), '@') ? '' : '@' }}{{ env('CBT_ADMIN_TIKTOK') }}"
+                target="_blank"
                 class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:border-black hover:shadow-lg transition-all text-center block group cursor-pointer">
                 <div
                     class="w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform flex items-center justify-center">
@@ -57,10 +59,12 @@
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg">TikTok</h3>
                 <p class="text-gray-900 font-bold mt-2 text-sm">{{ env('CBT_ADMIN_TIKTOK') }}</p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold"></p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Kunjungi Profil</p>
             </a>
 
-            <a href="mailto:{{ env('CBT_ADMIN_EMAIL') }}"
+            {{-- EMAIL TETAP SAMA (mailto: memang bertugas membuka aplikasi Email bawaan) --}}
+            {{-- EMAIL: Diganti agar langsung membuka web Gmail (Compose) --}}
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{ env('CBT_ADMIN_EMAIL') }}" target="_blank"
                 class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-500 hover:shadow-lg transition-all text-center block group cursor-pointer">
                 <div class="w-12 h-12 mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <svg viewBox="0 0 24 24" fill="#3B82F6" xmlns="http://www.w3.org/2000/svg">
@@ -70,7 +74,7 @@
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg">Email</h3>
                 <p class="text-gray-700 font-bold mt-2 text-[11px] break-all">{{ env('CBT_ADMIN_EMAIL') }}</p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Kirim Pesan</p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Buka via Gmail Web</p>
             </a>
 
         </div>

@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Models\Question;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-// TAMBAHAN TURBO EXCEL
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 
@@ -20,22 +19,50 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithBatchInserts, With
 
     public function model(array $row)
     {
+        // 1. Cek apakah baris soal kosong (Jika kosong, lewati)
         if (!isset($row['soal']) || empty(trim($row['soal']))) {
             return null;
         }
 
+        // 2. Ambil data Opsi dari kolom A, B, C, D, E
+        $opsiA = $row['a'] ?? null;
+        $opsiB = $row['b'] ?? null;
+        $opsiC = $row['c'] ?? null;
+        $opsiD = $row['d'] ?? null;
+        $opsiE = $row['e'] ?? null;
+
+        // 3. Ambil Teks Jawaban Asli (Misal: "Soekarno")
+        $jawabanAsli = trim($row['kunci_jawaban'] ?? '');
+
+        // 4. LOGIKA PENCARIAN KUNCI JAWABAN (Mendeteksi A/B/C/D/E secara otomatis)
+        $correctAnswer = 'A'; // Default aman jika kebetulan kosong/tidak ada yang cocok
+
+        // Kita ubah teks menjadi huruf kecil semua (strtolower) agar kebal dari Typo besar/kecil
+        $jawabanAsliLower = strtolower($jawabanAsli);
+
+        if ($jawabanAsliLower == strtolower(trim($opsiA))) {
+            $correctAnswer = 'A';
+        } elseif ($jawabanAsliLower == strtolower(trim($opsiB))) {
+            $correctAnswer = 'B';
+        } elseif ($jawabanAsliLower == strtolower(trim($opsiC))) {
+            $correctAnswer = 'C';
+        } elseif ($jawabanAsliLower == strtolower(trim($opsiD))) {
+            $correctAnswer = 'D';
+        } elseif ($jawabanAsliLower == strtolower(trim($opsiE))) {
+            $correctAnswer = 'E';
+        }
+
+        // 5. Simpan ke Database
         return new Question([
             'exam_package_id' => $this->packageId,
             'question_text'   => '<p>' . $row['soal'] . '</p>',
-            'option_a'        => $row['opsi_a'] ?? null,
-            'option_b'        => $row['opsi_b'] ?? null,
-            'option_c'        => $row['opsi_c'] ?? null,
-            'option_d'        => $row['opsi_d'] ?? null,
-            'option_e'        => $row['opsi_e'] ?? null,
-            'correct_answer'  => strtoupper(trim($row['kunci_jawaban'])),
+            'option_a'        => $opsiA,
+            'option_b'        => $opsiB,
+            'option_c'        => $opsiC,
+            'option_d'        => $opsiD,
+            'option_e'        => $opsiE,
+            'correct_answer'  => $correctAnswer, // Yang masuk ke DB tetap A/B/C/D/E hasil pencarian
             'explanation'     => isset($row['pembahasan']) ? '<p>' . $row['pembahasan'] . '</p>' : null,
-
-            // PENYESUAIAN DATABASE BARU: Set default false karena Excel isinya teks
             'is_answer_image' => false,
         ]);
     }
@@ -44,19 +71,11 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithBatchInserts, With
     // MESIN TURBO START
     // ==========================================
 
-    /**
-     * Memasukkan data ke database per 100 baris sekaligus (Bukan 1 per 1).
-     * Ini mencegah Ngrok Timeout karena proses database sangat cepat.
-     */
     public function batchSize(): int
     {
         return 100;
     }
 
-    /**
-     * Membaca file Excel per 100 baris ke memori RAM agar server tidak jebol/hang
-     * saat membaca file Excel yang berisi ribuan soal.
-     */
     public function chunkSize(): int
     {
         return 100;

@@ -111,7 +111,34 @@
                 </div>
 
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
-                    @if ($package->questions_count > 0)
+                    {{-- 
+                        PENGECEKAN STATUS PENGERJAAN & AKSES 
+                        Kita cek nilai user khusus untuk paket yang sedang di-looping ini 
+                    --}}
+                    @php
+                        $isLocked = !auth()->user()->canAccessTier($package->minimum_tier);
+                        $hasFinished = \App\Models\UserResult::where('user_id', auth()->id())
+                            ->where('exam_package_id', $package->id)
+                            ->whereNotNull('finished_at')
+                            ->exists();
+                    @endphp
+
+                    @if ($package->questions_count == 0)
+                        <button disabled
+                            class="block w-full text-center bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-lg cursor-not-allowed">
+                            Soal Belum Tersedia
+                        </button>
+                    @elseif ($hasFinished)
+                        <button type="button" disabled
+                            class="block w-full text-center bg-gray-200 text-gray-500 border border-transparent font-bold py-2 px-4 rounded-lg cursor-not-allowed shadow-sm">
+                            ✅ Selesai
+                        </button>
+                    @elseif ($isLocked)
+                        <a href="{{ route('user.upgrade') }}"
+                            class="block w-full text-center bg-gray-100 text-gray-500 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
+                            🔒 Terkunci (Upgrade)
+                        </a>
+                    @else
                         <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0">
                             @csrf
                             <button type="submit"
@@ -119,11 +146,6 @@
                                 🚀 Mulai Kerjakan
                             </button>
                         </form>
-                    @else
-                        <button disabled
-                            class="block w-full text-center bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-lg cursor-not-allowed">
-                            Soal Belum Tersedia
-                        </button>
                     @endif
                 </div>
             </div>

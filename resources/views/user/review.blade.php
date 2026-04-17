@@ -264,7 +264,7 @@
                                             </p>
                                             <div
                                                 class="px-2 py-1 bg-blue-100/80 border-l border-blue-400 text-[9px] text-blue-700 font-bold rounded flex items-center gap-1 w-max">
-                                                <span>🛡️</span> © UKAICHAMPION. Dilarang sebarluaskan.
+                                                <span>🛡️</span> © UKAICHAMPION.
                                             </div>
                                         </div>
                                         <div class="prose max-w-none text-sm text-gray-800 protect-text leading-relaxed">

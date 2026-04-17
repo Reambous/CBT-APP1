@@ -22,6 +22,12 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin'),
         ]);
 
+        Admin::create([
+            'name' => 'admin1',
+            'email' => 'admin1@gmail.com',
+            'password' => Hash::make('admin1'),
+        ]);
+
         // 2. Buat Akun User Premium
         User::create(
             [

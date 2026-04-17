@@ -124,7 +124,7 @@ class UserDashboardController extends Controller
         }
 
         // 3. Lolos Satpam -> Buat Transaksi
-        $prices = ['plus' => 50000, 'pro' => 99000, 'ultra' => 199000];
+        $prices = ['plus' => 9999, 'pro' => 29999, 'ultra' => 49999];
         $transaction = \App\Models\Transaction::create([
             'user_id' => $user->id,
             'amount' => $prices[$request->tier],
@@ -145,9 +145,12 @@ class UserDashboardController extends Controller
             return redirect()->route('user.upgrade')->with('error', 'Tagihan tidak ditemukan atau telah ditolak oleh Admin. Silakan buat pesanan baru.');
         }
 
+        // Kita jadikan integer (int) agar kebal terhadap error tipe data
+        $amount = (int) $transaction->amount;
+
         $tierName = 'Paket PLUS';
-        if ($transaction->amount == 99000) $tierName = 'Paket PRO';
-        if ($transaction->amount == 199000) $tierName = 'Paket ULTRA';
+        if ($amount === 29999) $tierName = 'Paket PRO';
+        if ($amount === 49999) $tierName = 'Paket ULTRA';
 
         return view('user.invoice', compact('transaction', 'tierName'));
     }
