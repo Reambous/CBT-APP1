@@ -61,16 +61,15 @@ new class extends Component {
         $transaction = Transaction::findOrFail($id);
 
         if ($transaction->status === 'pending') {
-            $newTier = 'plus';
-            if ($transaction->amount >= 99000 && $transaction->amount < 199000) {
-                $newTier = 'pro';
-            } elseif ($transaction->amount >= 199000) {
-                $newTier = 'ultra';
-            }
+            // --- INI PERUBAHANNYA ---
+            // Langsung ambil nama paket dari database transaksi, tidak perlu tebak harga lagi!
+            $newTier = $transaction->tier;
+            // ------------------------
 
             $user = \App\Models\User::find($transaction->user_id);
             $newUntil = now()->addYear();
 
+            // Logika perpanjangan waktu (sudah benar, tidak perlu diubah)
             if ($user->is_premium && $user->premium_until && now()->lessThan($user->premium_until)) {
                 if ($user->premium_tier === $newTier) {
                     $newUntil = \Carbon\Carbon::parse($user->premium_until)->addYear();
@@ -79,11 +78,13 @@ new class extends Component {
                 }
             }
 
+            // Update status transaksi
             $transaction->update([
                 'status' => 'success',
                 'paid_at' => now(),
             ]);
 
+            // Update status user dengan tier yang dibeli
             $user->update([
                 'is_premium' => true,
                 'premium_tier' => $newTier,

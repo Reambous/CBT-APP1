@@ -14,6 +14,7 @@ class Transaction extends Model
         'amount',
         'status',
         'paid_at',
+        'tier', // <--- TAMBAHKAN BARIS INI
     ];
 
     protected function casts(): array

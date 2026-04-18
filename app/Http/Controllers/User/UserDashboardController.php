@@ -124,10 +124,12 @@ class UserDashboardController extends Controller
         }
 
         // 3. Lolos Satpam -> Buat Transaksi
+        // 3. Lolos Satpam -> Buat Transaksi
         $prices = ['plus' => 9999, 'pro' => 29999, 'ultra' => 49999];
         $transaction = \App\Models\Transaction::create([
             'user_id' => $user->id,
             'amount' => $prices[$request->tier],
+            'tier' => $request->tier, // <--- TAMBAHKAN BARIS INI
             'status' => 'pending',
         ]);
 
