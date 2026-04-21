@@ -8,6 +8,7 @@ use App\Http\Controllers\User\ContactController;
 use Livewire\Volt\Volt;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\GoogleAuthController;
 // Pastikan ini ada di bagian paling atas file web.php
 
 
@@ -22,17 +23,21 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+// Route::get('/register', function () {
+//     return view('auth.register');
+// })->name('register');
 Route::get('/admin/login', function () {
     return view('auth.admin_login');
 })->name('admin.login');
 
 // 2. Rute Proses Autentikasi (Menerima data dari Form)
-Route::post('/register-process', [AuthController::class, 'register'])->name('register.process');
+// Route::post('/register-process', [AuthController::class, 'register'])->name('register.process');
 Route::post('/login-process', [AuthController::class, 'login'])->name('login.process');
 Route::post('/admin/login-process', [AuthController::class, 'adminLogin'])->name('admin.login.process');
+
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // 3. Rute Khusus USER (Dilindungi oleh Satpam 'auth:web')

@@ -10,7 +10,7 @@ new class extends Component {
     use WithFileUploads;
 
     public $name;
-    public $email;
+    // 1. public $email; <--- SUDAH DIHAPUS
     public $password;
     public $profile_picture;
     public $old_picture;
@@ -19,7 +19,7 @@ new class extends Component {
     {
         $user = auth()->user();
         $this->name = $user->name;
-        $this->email = $user->email;
+        // 2. $this->email = $user->email; <--- SUDAH DIHAPUS
         $this->old_picture = $user->profile_picture;
     }
 
@@ -29,14 +29,14 @@ new class extends Component {
 
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            // 3. validasi email <--- SUDAH DIHAPUS
             'password' => ['nullable', Password::defaults()],
             'profile_picture' => 'nullable|image|max:3072', // Maksimal 3MB
         ]);
 
         $data = [
             'name' => $this->name,
-            'email' => $this->email,
+            // 4. 'email' => $this->email, <--- SUDAH DIHAPUS
         ];
 
         // Logika Ganti Password
@@ -125,12 +125,14 @@ new class extends Component {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                        <input type="email" wire:model="email"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-100 outline-none @error('email') border-red-500 @enderror">
-                        @error('email')
-                            <span class="text-red-500 text-xs font-bold">{{ $message }}</span>
-                        @enderror
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email (Terhubung Google SSO)</label>
+
+                        {{-- Hapus wire:model, gunakan value langsung dari Auth, tambah readonly --}}
+                        <input type="email" value="{{ auth()->user()->email }}" readonly
+                            class="w-full px-4 py-2 border border-gray-200 bg-gray-100 text-gray-500 rounded-lg cursor-not-allowed focus:outline-none select-none">
+
+                        <p class="text-xs text-red-500 mt-1 font-medium">*Email tidak dapat diubah demi keamanan akun.
+                        </p>
                     </div>
 
                     <div class="pt-4 border-t border-dashed">

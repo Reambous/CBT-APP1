@@ -205,7 +205,10 @@ new class extends Component {
         <p class="text-gray-400 text-xs mt-4 font-mono">Klik di mana saja atau tombol X untuk menutup</p>
     </div>
 
-    <div x-data="timerData()" x-init="startTimer()">
+    <div x-data="{
+        timer: timerData(),
+        localAnswers: @js($answers)
+    }" x-init="timer.startTimer()">
         @if (count($questions) > 0)
             @php $currentQ = $questions[$currentQuestionIndex]; @endphp
 
@@ -248,9 +251,9 @@ new class extends Component {
                                     <div class="pt-1">
                                         <input type="radio" name="answer_{{ $currentQ->id }}"
                                             value="{{ strtoupper($opt) }}"
-                                            onclick="simpanJawabanKeServer({{ $currentQ->id }}, '{{ strtoupper($opt) }}')"
                                             class="w-5 h-5 text-blue-600 flex-shrink-0 cursor-pointer"
-                                            {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == strtoupper($opt) ? 'checked' : '' }}>
+                                            @click="localAnswers[{{ $currentQ->id }}] = '{{ strtoupper($opt) }}'; simpanJawabanKeServer({{ $currentQ->id }}, '{{ strtoupper($opt) }}')"
+                                            :checked="localAnswers[{{ $currentQ->id }}] === '{{ strtoupper($opt) }}'">
                                     </div>
 
                                     <div class="text-gray-800 w-full relative overflow-hidden">
@@ -307,14 +310,26 @@ new class extends Component {
                                 Butir</span>
                         </div>
 
-                        <div class="max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin">
-                            <div class="flex flex-wrap gap-2 justify-start p-2">
+                        <div class="max-h-[60vh] overflow-y-auto scrollbar-thin p-2">
+                            <div class="flex flex-wrap gap-3 justify-start pb-4">
                                 @foreach ($questions as $index => $q)
                                     <button wire:click="jumpToQuestion({{ $index }})"
                                         onclick="scrollToTopQuestion()"
-                                        class="w-9 h-9 flex items-center justify-center font-bold text-xs border rounded-lg transition-all relative
-                                        {{ isset($answers[$q->id]) ? 'bg-blue-500 border-blue-600 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }} 
-                                        {{ $index === $currentQuestionIndex ? 'ring-2 ring-blue-800 ring-offset-2 scale-110 z-10' : '' }}">
+                                        class="w-9 h-9 flex items-center justify-center font-bold text-xs border rounded-lg transition-all relative"
+                                        :class="{
+                                            /* 1. Jika Sudah Dijawab & BUKAN soal saat ini */
+                                            'bg-blue-100 border-blue-400 text-blue-700': localAnswers[
+                                                    {{ $q->id }}] &&
+                                                {{ $index !== $currentQuestionIndex ? 'true' : 'false' }},
+                                        
+                                            /* 2. Jika Belum Dijawab & BUKAN soal saat ini */
+                                            'bg-white border-gray-300 text-gray-600 hover:bg-gray-50': !localAnswers[
+                                                    {{ $q->id }}] &&
+                                                {{ $index !== $currentQuestionIndex ? 'true' : 'false' }},
+                                        
+                                            /* 3. Jika ini adalah SOAL SAAT INI (Aktif) - Tanpa Scale! */
+                                            'bg-blue-600 border-blue-600 text-white ring-2 ring-blue-300 ring-offset-2 z-10 shadow-md': {{ $index === $currentQuestionIndex ? 'true' : 'false' }}
+                                        }">
                                         {{ $index + 1 }}
                                     </button>
                                 @endforeach
@@ -433,7 +448,7 @@ new class extends Component {
                             // --- INI KUNCINYA ---
                             // Memberitahu Livewire bahwa jawaban sudah berubah 
                             // agar navigasi di samping otomatis berubah warna jadi biru
-                            @this.set('answers.' + questionId, jawaban);
+                            // @this.set('answers.' + questionId, jawaban);
                         }
                     })
                     .catch(error => {

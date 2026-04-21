@@ -20,6 +20,7 @@ class User extends Authenticatable
         'is_premium',
         'premium_until',
         'premium_tier',
+        'google_id',
     ];
 
     protected $hidden = [

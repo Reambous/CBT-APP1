@@ -258,7 +258,7 @@ new class extends Component {
                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
                     <p class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Mulai Dari</p>
                     <p class="text-2xl font-black text-blue-700" id="modalPrice">Rp 0</p>
-                    <p class="text-xs text-blue-500 mt-1">per bulan</p>
+                    <p class="text-xs text-blue-500 mt-1">per tahun</p>
                 </div>
 
                 <div class="flex flex-col gap-3">
@@ -276,21 +276,21 @@ new class extends Component {
     </div>
 
     <script>
-        // Data Harga untuk masing-masing Paket (Sesuaikan dengan harga di upgrade.blade.php)
+        // UBAH DI SINI: Samakan harga dengan yang ada di upgrade.blade.php
         const tierData = {
             'plus': {
                 name: '✨ Paket PLUS',
-                price: 'Rp 50.000',
+                price: 'Rp 9.999',
                 icon: '✨'
             },
             'pro': {
                 name: '👑 Paket PRO',
-                price: 'Rp 99.000',
+                price: 'Rp 29.999',
                 icon: '👑'
             },
             'ultra': {
                 name: '🔮 Paket ULTRA',
-                price: 'Rp 199.000',
+                price: 'Rp 49.999',
                 icon: '🔮'
             }
         };
