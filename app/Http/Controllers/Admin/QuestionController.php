@@ -45,6 +45,8 @@ class QuestionController extends Controller
 
         \App\Models\Question::create($data);
 
+        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $request->exam_package_id);
+
         return redirect()->route('admin.packages.show', $request->exam_package_id)
             ->with('success', 'Soal berhasil disimpan!');
     }
@@ -85,6 +87,8 @@ class QuestionController extends Controller
 
         $question->update($data);
 
+        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $question->exam_package_id);
+
         return redirect()->route('admin.packages.show', $question->exam_package_id)
             ->with('success', 'Soal berhasil diperbarui!');
     }
@@ -99,6 +103,8 @@ class QuestionController extends Controller
 
         // Hapus soal dari database
         $question->delete();
+
+        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $packageId);
 
         // Kembalikan Admin ke Ruang Kelola Soal paket tersebut
         return redirect()->route('admin.packages.show', $packageId)
