@@ -426,35 +426,39 @@ new class extends Component {
             // Variabel untuk menyimpan ID Kertas Ujian saat ini
             const RESULT_ID = {{ $result_id }};
 
-            function simpanJawabanKeServer(questionId, jawaban) {
-                // Tembak data ke API tanpa memuat ulang halaman (ke Redis)
-                fetch('{{ route('api.exam.save') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            result_id: RESULT_ID,
-                            question_id: questionId,
-                            answer: jawaban
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            console.log('Jawaban ' + jawaban + ' tersimpan di Redis!');
+            // Siapkan variabel penampung antrean di luar fungsi
+            let antreanKirim = {};
 
-                            // --- INI KUNCINYA ---
-                            // Memberitahu Livewire bahwa jawaban sudah berubah 
-                            // agar navigasi di samping otomatis berubah warna jadi biru
-                            // @this.set('answers.' + questionId, jawaban);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Gagal menyimpan jawaban, pastikan internet Anda stabil.');
-                    });
+            function simpanJawabanKeServer(questionId, jawaban) {
+                // 1. Batalkan pengiriman sebelumnya untuk soal ini (jika siswa ganti jawaban cepat)
+                if (antreanKirim[questionId]) {
+                    clearTimeout(antreanKirim[questionId]);
+                }
+
+                // 2. Buat antrean baru: Tunggu 1000ms (1 detik) sebelum menembak ke server
+                antreanKirim[questionId] = setTimeout(() => {
+
+                    fetch('{{ route('api.exam.save') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                result_id: RESULT_ID,
+                                question_id: questionId,
+                                answer: jawaban
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                console.log('Jawaban final ' + jawaban + ' tersimpan di Redis!');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+
+                }, 1000); // Angka 1000 = 1 detik (bisa kamu sesuaikan)
             }
         </script>
     </div>
