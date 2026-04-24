@@ -12,6 +12,7 @@ class Question extends Model
     protected $fillable = [
         'exam_package_id',
         'question_text',
+        'order_num',
         'option_a',
         'option_b',
         'option_c',

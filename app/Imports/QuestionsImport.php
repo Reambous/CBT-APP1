@@ -52,9 +52,13 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithBatchInserts, With
             $correctAnswer = 'E';
         }
 
+        $lastOrder = \App\Models\Question::where('exam_package_id', $this->packageId)->max('order_num');
+        $nextOrder = $lastOrder ? $lastOrder + 1 : 1;
+
         // 5. Simpan ke Database
         return new Question([
             'exam_package_id' => $this->packageId,
+            'order_num'       => $nextOrder,
             'question_text'   => '<p>' . $row['soal'] . '</p>',
             'option_a'        => $opsiA,
             'option_b'        => $opsiB,

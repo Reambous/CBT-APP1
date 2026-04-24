@@ -1,15 +1,17 @@
 <?php
 
+namespace App\Models; // Hanya memastikan model terpanggil
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\ExamPackage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class QuestionController extends Controller
 {
-    // Method index biarkan kosong atau arahkan ke Livewire/Volt yang sudah kita buat
     public function index()
     {
         return redirect()->route('admin.packages.index');
@@ -17,97 +19,172 @@ class QuestionController extends Controller
 
     public function create(Request $request)
     {
-        // Tangkap package_id dari URL (jika ada)
         $selectedPackageId = $request->query('package_id');
-
         $packages = ExamPackage::latest()->get();
-        return view('admin.questions.create', compact('packages', 'selectedPackageId'));
+
+        // Ambil nomor urut terakhir untuk saran urutan di form
+        $lastOrder = 0;
+        if ($selectedPackageId) {
+            $lastOrder = Question::where('exam_package_id', $selectedPackageId)->max('order_num') ?? 0;
+        }
+
+        return view('admin.questions.create', compact('packages', 'selectedPackageId', 'lastOrder'));
     }
 
     public function store(Request $request)
     {
-        $isImage = $request->has('is_answer_image');
-        $options = ['a', 'b', 'c', 'd', 'e'];
-        $data = $request->all();
+        $request->validate([
+            'exam_package_id' => 'required|exists:exam_packages,id',
+            'order_num'       => 'required|integer|min:1',
+            'question_text'   => 'required',
+            'correct_answer'  => 'required',
+        ]);
 
-        if ($isImage) {
-            foreach ($options as $opt) {
-                if ($request->hasFile("image_$opt")) {
-                    // Simpan gambar ke folder storage/public/options
-                    $path = $request->file("image_$opt")->store('options', 'public');
-                    $data["option_$opt"] = $path;
+        try {
+            // Gunakan variabel lokal agar tidak ada drama "use" di closure
+            $packageId = $request->exam_package_id;
+            $orderNum = $request->order_num;
+            $isImage = $request->has('is_answer_image');
+            $data = $request->only([
+                'exam_package_id',
+                'order_num',
+                'question_text',
+                'option_a',
+                'option_b',
+                'option_c',
+                'option_d',
+                'option_e',
+                'correct_answer',
+                'explanation'
+            ]);
+            $data['is_answer_image'] = $isImage;
+
+            DB::transaction(function () use ($request, $packageId, $orderNum, $isImage, &$data) {
+
+                // 1. PAKSA GESER: Semua soal yang nomornya SAMA atau LEBIH BESAR harus +1
+                // Kita pakai urutan DESC (besar ke kecil) saat update agar tidak bentrok di database
+                $affected = Question::where('exam_package_id', $packageId)
+                    ->where('order_num', '>=', $orderNum)
+                    ->orderBy('order_num', 'desc')
+                    ->increment('order_num');
+
+                // 2. Logika Upload Gambar Opsi (Tetap sama)
+                if ($isImage) {
+                    foreach (['a', 'b', 'c', 'd', 'e'] as $opt) {
+                        if ($request->hasFile("image_$opt")) {
+                            $path = $request->file("image_$opt")->store('options', 'public');
+                            $data["option_$opt"] = '/storage/' . $path;
+                        }
+                    }
                 }
+
+                // 3. Simpan soal baru kamu sebagai nomor 2 yang "Asli"
+                Question::create($data);
+            });
+
+            Cache::forget('questions_package_' . $packageId);
+
+            if ($request->action == 'save_and_continue') {
+                return back()->with([
+                    'success' => 'Soal berhasil disimpan!',
+                    'next_order' => (int) $orderNum + 1
+                ]);
             }
+
+            return redirect()->route('admin.packages.show', $packageId)
+                ->with('success', 'Soal berhasil disimpan!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
         }
-
-        // Set status is_answer_image ke database
-        $data['is_answer_image'] = $isImage;
-
-        \App\Models\Question::create($data);
-
-        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $request->exam_package_id);
-
-        return redirect()->route('admin.packages.show', $request->exam_package_id)
-            ->with('success', 'Soal berhasil disimpan!');
     }
 
     public function edit(string $id)
     {
-        // Cari soal yang mau diedit
         $question = Question::findOrFail($id);
-
-        // Ambil data paket untuk dropdown
         $packages = ExamPackage::latest()->get();
-
-        // Buka halaman form edit
         return view('admin.questions.edit', compact('question', 'packages'));
     }
 
     public function update(Request $request, $id)
     {
-        $question = \App\Models\Question::findOrFail($id);
-        $isImage = $request->has('is_answer_image');
-        $options = ['a', 'b', 'c', 'd', 'e'];
+        // 1. Validasi dulu biar aman
+        $request->validate([
+            'exam_package_id' => 'required|exists:exam_packages,id',
+            'order_num'       => 'required|integer|min:1',
+            'question_text'   => 'required',
+            'correct_answer'  => 'required',
+        ]);
 
-        $data = $request->all(); // Ambil semua data request
-        $data['is_answer_image'] = $isImage;
+        $question = Question::findOrFail($id);
+        $oldOrder = $question->order_num;
+        $newOrder = (int) $request->order_num;
+        $packageId = $request->exam_package_id;
 
-        if ($isImage) {
-            foreach ($options as $opt) {
-                // Jika admin upload gambar baru, timpa yang lama
-                if ($request->hasFile("image_$opt")) {
-                    $path = $request->file("image_$opt")->store('options', 'public');
-                    $data["option_$opt"] = $path;
-                } else {
-                    // Jika tidak upload baru, tetap gunakan path gambar yang lama
-                    $data["option_$opt"] = $question->{"option_$opt"};
+        try {
+            DB::transaction(function () use ($request, $question, $oldOrder, $newOrder, $packageId) {
+
+                // --- LOGIKA GESER OTOMATIS ---
+                if ($oldOrder != $newOrder) {
+                    // Jika nomor diubah ke angka yang LEBIH KECIL (Contoh: soal no 5 jadi no 2)
+                    if ($newOrder < $oldOrder) {
+                        Question::where('exam_package_id', $packageId)
+                            ->whereBetween('order_num', [$newOrder, $oldOrder - 1])
+                            ->orderBy('order_num', 'desc') // Geser dari bawah biar gak bentrok
+                            ->increment('order_num');
+                    }
+                    // Jika nomor diubah ke angka yang LEBIH BESAR (Contoh: soal no 2 jadi no 5)
+                    else {
+                        Question::where('exam_package_id', $packageId)
+                            ->whereBetween('order_num', [$oldOrder + 1, $newOrder])
+                            ->orderBy('order_num', 'asc')
+                            ->decrement('order_num');
+                    }
                 }
-            }
+
+                // 2. Siapkan Data Update
+                $isImage = $request->has('is_answer_image');
+                $data = $request->all();
+                $data['is_answer_image'] = $isImage;
+
+                // Logika Gambar (Sudah diperbaiki format /storage/ nya)
+                if ($isImage) {
+                    foreach (['a', 'b', 'c', 'd', 'e'] as $opt) {
+                        if ($request->hasFile("image_$opt")) {
+                            $path = $request->file("image_$opt")->store('options', 'public');
+                            $data["option_$opt"] = '/storage/' . $path;
+                        } else {
+                            // Tetap pakai gambar lama kalau gak upload baru
+                            $data["option_$opt"] = $question->{"option_$opt"};
+                        }
+                    }
+                } else {
+                    // Jika pindah ke mode teks, pastikan kolom gambar tidak merusak tampilan
+                    // (Opsi teks diambil otomatis dari $request->all() di atas)
+                }
+
+                // 3. Eksekusi Update
+                $question->update($data);
+            });
+
+            // 4. Bersihkan Cache
+            Cache::forget('questions_package_' . $packageId);
+
+            return redirect()->route('admin.packages.show', $packageId)
+                ->with('success', 'Soal berhasil diupdate & urutan dirapikan!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal update: ' . $e->getMessage())->withInput();
         }
-
-        $question->update($data);
-
-        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $question->exam_package_id);
-
-        return redirect()->route('admin.packages.show', $question->exam_package_id)
-            ->with('success', 'Soal berhasil diperbarui!');
     }
 
     public function destroy(string $id)
     {
-        // Cari soalnya
         $question = Question::findOrFail($id);
-
-        // Simpan ID paketnya dulu sebelum soalnya dihapus (untuk arah kembali)
         $packageId = $question->exam_package_id;
-
-        // Hapus soal dari database
         $question->delete();
 
-        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $packageId);
+        Cache::forget('questions_package_' . $packageId);
 
-        // Kembalikan Admin ke Ruang Kelola Soal paket tersebut
         return redirect()->route('admin.packages.show', $packageId)
-            ->with('success', 'Satu soal berhasil dihapus dari paket!');
+            ->with('success', 'Soal berhasil dihapus!');
     }
 }

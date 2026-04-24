@@ -9,6 +9,7 @@ use Livewire\Volt\Volt;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Admin\QuestionController;
 // Pastikan ini ada di bagian paling atas file web.php
 
 
@@ -62,40 +63,27 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/invoice/{id}', [UserDashboardController::class, 'invoice'])->name('user.invoice');
     Route::post('/invoice/{id}/cancel', [UserDashboardController::class, 'cancelInvoice'])->name('user.invoice.cancel');
     Route::post('/api/exam/save-answer', [\App\Http\Controllers\Api\ExamApiController::class, 'saveAnswer'])->name('api.exam.save');
-    // RUTE KHUSUS LOAD TESTING k6 (HAPUS JIKA APLIKASI SUDAH RILIS ONLINE)
-    // Route::get('/k6-test-ujian', function () {
-    //     // 1. BEBAN BACA: Memaksa database mencari dan mengacak 50 soal
-    //     // (Sesuaikan nama model 'Question' dengan model soal milikmu jika berbeda)
-    //     $soal = \App\Models\Question::inRandomOrder()->limit(50)->get();
-
-    //     // 2. BEBAN TULIS: Memaksa database menyimpan hasil pengerjaan fiktif
-    //     \App\Models\UserResult::create([
-    //         'user_id' => 1, // Pakai user ID sembarang yang ada di database
-    //         'exam_package_id' => 1,
-    //         'attempt_number' => rand(1, 10000), // Agar tidak bentrok
-    //         'score' => rand(40, 100),
-    //         'finished_at' => now(),
-    //     ]);
-
-    //     return response()->json(['status' => 'Simulasi Pengerjaan & Simpan Nilai Sukses!']);
-    // });
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
 Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    // Tambahkan baris ajaib ini: Route Resource untuk CRUD Kategori
+
+    // CRUD Kategori
     Route::resource('/admin/categories', App\Http\Controllers\Admin\ExamCategoryController::class)->names('admin.categories');
+
+    // CRUD Paket
     Route::resource('/admin/packages', App\Http\Controllers\Admin\ExamPackageController::class)->names('admin.packages');
-    Route::resource('/admin/questions', App\Http\Controllers\Admin\QuestionController::class)->names('admin.questions');
-    // Manajemen User (Siswa/Peserta)
+
+    // --- PERBAIKAN DI SINI ---
+    // Gunakan resource agar SEMUA rute soal (create, store, edit, update, destroy) aktif otomatis
+    Route::resource('/admin/questions', \App\Http\Controllers\Admin\QuestionController::class)->names('admin.questions');
+    // -------------------------
+
     Route::resource('/admin/users', App\Http\Controllers\Admin\UserController::class)->names('admin.users');
 
     Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
-    // Route Transactions (Ini sudah benar formatnya)
     Route::get('/admin/transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'transactions'])->name('admin.transactions');
-
-    // Route Leaderboard (Sekarang sudah pakai Controller!)
     Route::get('/admin/leaderboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'leaderboard'])->name('admin.leaderboard');
 });
 

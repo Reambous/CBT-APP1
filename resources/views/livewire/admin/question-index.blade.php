@@ -85,7 +85,7 @@ new class extends Component {
     {
         $query = Question::where('exam_package_id', $this->package->id)
             ->where('question_text', 'like', '%' . $this->search . '%')
-            ->latest();
+            ->orderBy('order_num', 'asc'); // Urutkan berdasarkan kolom order_num dari kecil ke besar
 
         return [
             'allQuestionIds' => (clone $query)->pluck('id'),
@@ -198,7 +198,10 @@ new class extends Component {
                             <input type="checkbox" wire:model.live="selected" value="{{ $q->id }}"
                                 class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
                         </td>
-                        <td class="px-6 py-4 text-sm font-bold text-gray-600">{{ $questions->firstItem() + $index }}
+                        <td class="px-6 py-4 text-sm font-bold text-gray-600 text-center">
+                            <span
+                                class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs shadow-sm">{{ $q->order_num ?? 0 }}</span>
+                        </td>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 line-clamp-2">{!! Str::limit(strip_tags($q->question_text), 100) !!}</div>
