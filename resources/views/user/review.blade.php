@@ -1,6 +1,6 @@
 @extends('user.layouts.app')
 
-@section('title', 'Pembahasan Ujian - CBT APP')
+@section('title', 'Pembahasan Ujian - UKAICHAMPION APP')
 
 @section('content')
     <style>
@@ -197,7 +197,9 @@
                                 </div>
 
                                 <div class="p-4 border-b border-gray-100">
-                                    <div class="prose max-w-none text-sm text-gray-800 mb-6 protect-text leading-relaxed">
+                                    <div class="prose max-w-none text-sm text-gray-800 mb-6 protect-text leading-relaxed"
+                                        onclick="if(event.target.tagName==='IMG') openLightbox(event.target.src)">
+                                        {{-- FIX: Tambahkan ini --}}
                                         {!! $q?->question_text ?? 'Soal dihapus.' !!}
                                     </div>
 
@@ -234,8 +236,20 @@
                                                     <div
                                                         class="flex-grow text-sm {{ $textClass }} protect-text overflow-hidden">
                                                         @if ($q->is_answer_image)
-                                                            <img src="{{ asset('storage/' . $optText) }}"
-                                                                class="option-image max-h-48 md:max-h-64 w-auto object-contain rounded-lg border border-gray-200 mt-1 pointer-events-auto shadow-sm">
+                                                            @php
+                                                                // FIX: Bersihkan path agar asset() tidak dobel panggil /storage/
+                                                                $cleanOptPath = ltrim(
+                                                                    str_replace(
+                                                                        ['/storage/', 'storage/'],
+                                                                        '',
+                                                                        $optText,
+                                                                    ),
+                                                                    '/',
+                                                                );
+                                                            @endphp
+                                                            <img src="{{ asset('storage/' . $cleanOptPath) }}"
+                                                                onclick="openLightbox(this.src)" {{-- FIX: Tambahkan fungsi zoom --}}
+                                                                class="option-image max-h-48 md:max-h-64 w-auto object-contain rounded-lg border border-gray-200 mt-1 pointer-events-auto shadow-sm cursor-zoom-in">
                                                         @else
                                                             {!! $optText !!}
                                                         @endif
@@ -267,8 +281,11 @@
                                                 <span>🛡️</span> © UKAICHAMPION.
                                             </div>
                                         </div>
-                                        <div class="prose max-w-none text-sm text-gray-800 protect-text leading-relaxed">
-                                            {!! $q->explanation !!}</div>
+                                        <div class="prose max-w-none text-sm text-gray-800 protect-text leading-relaxed"
+                                            onclick="if(event.target.tagName==='IMG') openLightbox(event.target.src)">
+                                            {{-- FIX: Tambahkan ini --}}
+                                            {!! $q->explanation !!}
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -291,7 +308,15 @@
                     @endforeach
                 </div>
             @endif
-
+            <div id="examLightboxModal"
+                class="hidden fixed inset-0 w-full h-full bg-black/80 z-[99999] flex items-center justify-center p-4"
+                style="position: fixed !important; top:0; left:0;"
+                onclick="this.classList.add('hidden'); document.body.style.overflow='auto'">
+                <button class="absolute top-4 right-4 text-white text-5xl font-black">&times;</button>
+                <img id="examLightboxImage" src=""
+                    class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border-2 border-white/20"
+                    onclick="event.stopPropagation()">
+            </div>
         </div>
 
         <script>
@@ -300,11 +325,11 @@
             const modalImg = document.getElementById('lightboxImage');
 
             // Fungsi membuka modal saat gambar diklik
-            function openLightbox(imgSrc) {
-                modalImg.src = imgSrc;
+            function openLightbox(src) {
+                if (!src) return;
+                const modal = document.getElementById('examLightboxModal');
+                document.getElementById('examLightboxImage').src = src;
                 modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                // Cegah scrolling halaman utama saat modal buka
                 document.body.style.overflow = 'hidden';
             }
 

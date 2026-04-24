@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-800">Overview Sistem</h1>
-        <p class="text-gray-500 mt-1">Selamat datang kembali di panel kendali CBT.</p>
+        <p class="text-gray-500 mt-1">Selamat datang kembali di panel kendali UKAICHAMPION.</p>
     </div>
 
     @if (session('success'))

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Kategori - CBT ADMIN</title>
+    <title>Edit Kategori - UKAICHAMPION ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 

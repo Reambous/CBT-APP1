@@ -34,9 +34,11 @@ class UserDashboardController extends Controller
         }
 
         // 2. Siapkan Query Dasar & Filter berdasarkan Kasta Pelanggan
+        // 2. Siapkan Query Dasar & Filter berdasarkan Kasta Pelanggan
         $query = ExamPackage::with('examCategory')
             ->withCount('questions')
             ->has('questions')
+            ->where('is_published', true) // 👈 TAMBAHKAN INI (Kunci Pintu Dashboard)
             ->whereHas('examCategory', function ($q) {
                 $q->whereNull('deleted_at');
             })
@@ -57,7 +59,14 @@ class UserDashboardController extends Controller
 
     public function exams()
     {
-        return view('user.exams');
+        $packages = ExamPackage::with('examCategory')
+            ->withCount('questions')
+            ->where('is_published', true) // ✅ Sudah ada
+            ->has('questions')           // ✅ Sudah ada
+            ->latest()
+            ->get();
+
+        return view('user.exams', compact('packages'));
     }
 
     public function history()

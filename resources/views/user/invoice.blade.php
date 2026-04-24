@@ -1,6 +1,6 @@
 @extends('user.layouts.app')
 
-@section('title', 'Tagihan Pembayaran - CBT APP')
+@section('title', 'Tagihan Pembayaran - UKAICHAMPION APP')
 
 @section('content')
     <div class="max-w-2xl mx-auto w-full mt-6 mb-12">
@@ -75,7 +75,7 @@
 
                 @php
                     $waText =
-                        "Halo Admin, konfirmasi pembayaran CBT.\n\n" .
+                        "Halo Admin, konfirmasi pembayaran UKAICHAMPION.\n\n" .
                         'Invoice: #' .
                         str_pad($transaction->id, 5, '0', STR_PAD_LEFT) .
                         "\n" .

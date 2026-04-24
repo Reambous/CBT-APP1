@@ -15,6 +15,7 @@ class ExamPackage extends Model
         'time_limit',
         'is_premium',
         'minimum_tier', // <--- Tambahkan ini
+        'is_published'
     ];
 
     // Relasi ke Atas: Dimiliki oleh 1 Kategori

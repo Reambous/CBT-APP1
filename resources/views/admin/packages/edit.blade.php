@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Paket - CBT ADMIN</title>
+    <title>Edit Paket - UKAICHAMPION ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 

@@ -38,7 +38,7 @@ new class extends Component {
     public function confirmViaWA()
     {
         $user = auth()->user();
-        $text = "Halo Admin, saya ingin konfirmasi pembayaran Premium CBT.\n\n";
+        $text = "Halo Admin, saya ingin konfirmasi pembayaran Premium UKAICHAMPION.\n\n";
         $text .= '*ID Transaksi:* #' . str_pad($this->pendingTransaction->id, 5, '0', STR_PAD_LEFT) . "\n";
         $text .= '*Nama Akun:* ' . $user->name . "\n";
         $text .= '*Email:* ' . $user->email . "\n";

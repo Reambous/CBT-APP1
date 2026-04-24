@@ -1,6 +1,6 @@
 @extends('user.layouts.app')
 
-@section('title', 'Dashboard Peserta - CBT APP')
+@section('title', 'Dashboard Peserta - UKAICHAMPION APP')
 
 @section('content')
     @if (session('error'))

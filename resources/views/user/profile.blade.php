@@ -1,6 +1,6 @@
 @extends('user.layouts.app')
 
-@section('title', 'Edit Profil - CBT APP')
+@section('title', 'Edit Profil - UKAICHAMPION APP')
 
 @section('content')
     <div class="mb-6">

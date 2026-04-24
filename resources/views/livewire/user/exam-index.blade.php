@@ -36,10 +36,11 @@ new class extends Component {
     {
         $user = Auth::user();
 
-        // 3. Siapkan Query Dasar
+        // 1. Siapkan Query Dasar (Gabungkan semua filter di sini)
         $query = ExamPackage::with('examCategory')
             ->withCount('questions')
             ->has('questions')
+            ->where('is_published', true) // 👈 PINDAH KE SINI: Biar konsisten dengan filter lain
             ->whereHas('examCategory', function ($q) {
                 $q->whereNull('deleted_at');
             })
@@ -51,15 +52,13 @@ new class extends Component {
             ->when($this->selectedTier, function ($q) {
                 $q->where('minimum_tier', $this->selectedTier);
             })
-            // 4. FILTER STATUS PENGERJAAN BARU
+            // FILTER STATUS PENGERJAAN
             ->when($this->selectedStatus, function ($q) use ($user) {
                 if ($this->selectedStatus === 'finished') {
-                    // Hanya tampilkan paket yang ID-nya ADA di tabel nilai milik user ini
                     $q->whereIn('id', function ($subQuery) use ($user) {
                         $subQuery->select('exam_package_id')->from('user_results')->where('user_id', $user->id)->whereNotNull('finished_at');
                     });
                 } elseif ($this->selectedStatus === 'unfinished') {
-                    // Hanya tampilkan paket yang ID-nya TIDAK ADA di tabel nilai milik user ini
                     $q->whereNotIn('id', function ($subQuery) use ($user) {
                         $subQuery->select('exam_package_id')->from('user_results')->where('user_id', $user->id)->whereNotNull('finished_at');
                     });
@@ -72,13 +71,15 @@ new class extends Component {
                 });
             });
 
+        // 2. Eksekusi PAGINATE (Simpan ke variabel $packages)
         $packages = $query->latest()->paginate(10);
-        $packageIds = $packages->pluck('id');
 
+        // 3. Ambil hasil pengerjaan user untuk paket yang tampil di halaman ini saja
+        $packageIds = $packages->pluck('id');
         $allUserResults = UserResult::where('user_id', $user->id)->whereIn('exam_package_id', $packageIds)->whereNotNull('finished_at')->latest('finished_at')->get()->groupBy('exam_package_id');
 
         return [
-            'packages' => $packages,
+            'packages' => $packages, // ✅ SEKARANG PAKAI PAGINATOR, error hasPages() pasti hilang
             'userResults' => $allUserResults,
             'categories' => ExamCategory::all(),
         ];

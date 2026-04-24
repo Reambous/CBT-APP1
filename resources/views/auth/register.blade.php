@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Akun - CBT APP</title>
+    <title>Daftar Akun - UKAICHAMPION APP</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
