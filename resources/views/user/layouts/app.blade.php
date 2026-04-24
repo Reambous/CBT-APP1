@@ -7,6 +7,9 @@
     <title>@yield('title', 'UKAICHAMPION')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
