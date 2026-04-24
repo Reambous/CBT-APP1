@@ -173,8 +173,38 @@
                                                     id="input-option-{{ strtolower($opt) }}">
                                             </div>
 
-                                            <div id="image-wrapper-{{ strtolower($opt) }}" class="mode-image hidden py-2">
+                                            <div id="image-wrapper-{{ strtolower($opt) }}"
+                                                class="mode-image hidden py-2 space-y-1">
+
+                                                @if (isset($question) && $question->is_answer_image && $question->$field)
+                                                    <div class="p-1 border rounded bg-white flex items-center gap-2 mb-1">
+                                                        @php
+                                                            $path = $question->$field;
+                                                            $url =
+                                                                str_starts_with($path, 'http') ||
+                                                                str_starts_with($path, '/storage')
+                                                                    ? asset($path)
+                                                                    : asset('storage/' . $path);
+                                                        @endphp
+                                                        <img src="{{ $url }}"
+                                                            class="h-10 w-10 object-contain rounded border shadow-inner">
+                                                        <span class="text-[9px] font-bold text-gray-400">Gambar Saat
+                                                            Ini.</span>
+                                                    </div>
+                                                @endif
+
+                                                <div id="preview-box-{{ strtolower($opt) }}"
+                                                    class="hidden p-1 border border-green-300 bg-green-50 rounded flex items-center gap-2 mb-1 transition-all">
+                                                    <img id="preview-img-{{ strtolower($opt) }}" src=""
+                                                        onclick="openModal(this.src)"
+                                                        class="h-10 w-10 object-contain rounded shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                                                        title="Klik untuk perbesar">
+                                                    <span class="text-[9px] font-black text-green-600">Preview File
+                                                        Baru</span>
+                                                </div>
+
                                                 <input type="file" name="image_{{ strtolower($opt) }}"
+                                                    onchange="previewImage(this, '{{ strtolower($opt) }}')"
                                                     class="text-[10px] w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-bold file:bg-blue-600 file:text-white"
                                                     accept="image/*">
                                             </div>
@@ -198,6 +228,14 @@
                 </button>
             </div>
         </form>
+        <div id="imageModal"
+            class="fixed inset-0 z-[99] hidden bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity"
+            onclick="closeModal()">
+            <span
+                class="absolute top-4 right-6 text-white text-4xl font-bold cursor-pointer hover:text-red-500 transition-colors">&times;</span>
+            <img id="modalImage" src=""
+                class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
+        </div>
     </div>
 
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -260,5 +298,53 @@
                 });
             }
         };
+        // 👇 FITUR LIVE PREVIEW GAMBAR 👇
+        function previewImage(input, optId) {
+            const previewBox = document.getElementById('preview-box-' + optId);
+            const previewImg = document.getElementById('preview-img-' + optId);
+
+            // Cek apakah ada file yang dipilih
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                // Saat file selesai dibaca, masukkan ke dalam tag <img src="...">
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewBox.classList.remove('hidden'); // Munculkan kotak hijau
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                // Jika admin batal memilih file
+                previewImg.src = '';
+                previewBox.classList.add('hidden'); // Sembunyikan kotak hijau
+            }
+        }
+
+        // 👇 FITUR ZOOM GAMBAR (MODAL) 👇
+        function openModal(imgSrc) {
+            if (!imgSrc) return; // Kalau tidak ada gambar, batalkan
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+
+            modalImg.src = imgSrc;
+            modal.classList.remove('hidden');
+
+            // Animasi membesar (scale up)
+            setTimeout(() => {
+                modalImg.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+
+            // Animasi mengecil sebelum hilang
+            modalImg.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
     </script>
 @endsection

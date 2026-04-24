@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\ExamPackage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\QuestionsImport;
+use Illuminate\Support\Facades\DB;
 
 new class extends Component {
     use WithPagination;
@@ -56,6 +57,61 @@ new class extends Component {
         session()->flash('success', 'Butir soal berhasil dihapus.');
     }
 
+    // --- FITUR BARU: NAIK/TURUN NOMOR SOAL ---
+    // 👇 FITUR BARU MULAI DARI SINI 👇
+    public function moveUp($id)
+    {
+        $current = Question::findOrFail($id);
+        $previous = Question::where('exam_package_id', $this->package->id)->where('order_num', '<', $current->order_num)->orderBy('order_num', 'desc')->first();
+
+        if ($previous) {
+            $tempOrder = $current->order_num;
+            $current->update(['order_num' => $previous->order_num]);
+            $previous->update(['order_num' => $tempOrder]);
+
+            // 👇 TAMBAHKAN BARIS INI: Panggil animasi highlight! 👇
+            $this->dispatch('scroll-to-soal', id: 'soal-' . $id);
+        }
+    }
+
+    public function moveDown($id)
+    {
+        $current = Question::findOrFail($id);
+        $next = Question::where('exam_package_id', $this->package->id)->where('order_num', '>', $current->order_num)->orderBy('order_num', 'asc')->first();
+
+        if ($next) {
+            $tempOrder = $current->order_num;
+            $current->update(['order_num' => $next->order_num]);
+            $next->update(['order_num' => $tempOrder]);
+
+            // 👇 TAMBAHKAN BARIS INI: Panggil animasi highlight! 👇
+            $this->dispatch('scroll-to-soal', id: 'soal-' . $id);
+        }
+    }
+    // 👆 FITUR BARU BERAKHIR DI SINI 👆
+    // ------------------------------------------
+    // --- FITUR AJAIB: RAPIKAN SEMUA NOMOR URUT ---
+    public function fixOrder()
+    {
+        // Ambil semua soal di paket ini, urutkan berdasarkan urutan saat ini atau ID pembuatannya
+        $questions = Question::where('exam_package_id', $this->package->id)->orderBy('order_num', 'asc')->orderBy('id', 'asc')->get();
+
+        // Loop dan timpa nomornya dari 1, 2, 3, dst.
+        $no = 1;
+        foreach ($questions as $q) {
+            // Update langsung ke database tanpa trigger logic rumit
+            Question::where('id', $q->id)->update(['order_num' => $no]);
+            $no++;
+        }
+
+        // Bersihkan cache jika kamu pakai cache
+        \Illuminate\Support\Facades\Cache::forget('questions_package_' . $this->package->id);
+
+        session()->flash('success', '✨ Berhasil! Urutan dirapikan dari 1 sampai ' . ($no - 1) . ' tanpa celah.');
+        $this->resetPage(); // Balik ke halaman pertama
+    }
+    // ---------------------------------------------
+
     public function importExcel()
     {
         $this->validate([
@@ -85,11 +141,10 @@ new class extends Component {
     {
         $query = Question::where('exam_package_id', $this->package->id)
             ->where('question_text', 'like', '%' . $this->search . '%')
-            ->orderBy('order_num', 'asc'); // Urutkan berdasarkan kolom order_num dari kecil ke besar
+            ->orderBy('order_num', 'asc');
 
         return [
             'allQuestionIds' => (clone $query)->pluck('id'),
-            // PERUBAHAN: Menjadi 20 soal per halaman
             'questions' => $query->paginate(20),
         ];
     }
@@ -133,9 +188,14 @@ new class extends Component {
                 </button>
             @endif
 
-
+            <button wire:click="fixOrder"
+                wire:confirm="Yakin ingin mereset dan merapikan semua urutan nomor soal dari 1 sampai akhir?"
+                wire:loading.attr="disabled"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors flex items-center gap-2 text-sm">
+                <span wire:loading.remove wire:target="fixOrder">🧹 Rapikan Nomor</span>
+                <span wire:loading wire:target="fixOrder">⏳ Merapikan...</span>
+            </button>
         </div>
-
     </div>
 
     @if (session('error'))
@@ -153,21 +213,15 @@ new class extends Component {
         <div class="p-4 bg-gray-50 border-b">
             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                 🧩 Peta Seluruh Soal ({{ count($allQuestionIds) }} Butir)
-                <span class="normal-case font-medium text-gray-400 text-[10px]">(Klik nomor untuk melompat ke
-                    halaman/soal)</span>
+                <span class="normal-case font-medium text-gray-400 text-[10px]">(Klik nomor untuk melompat)</span>
             </h4>
-
             <div class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-2 scrollbar-thin">
                 @foreach ($allQuestionIds as $index => $qId)
-                    @php
-                        // PERUBAHAN: Disesuaikan dengan batas 20 soal per halaman
-                        $targetPage = floor($index / 20) + 1;
-                    @endphp
+                    @php $targetPage = floor($index / 20) + 1; @endphp
                     <button type="button"
                         wire:click="jumpToPageAndScroll({{ $targetPage }}, 'soal-{{ $qId }}')"
                         class="w-7 h-7 flex items-center justify-center rounded border text-xs font-bold transition-all hover:opacity-80
-                    {{ in_array($qId, $selected) ? 'bg-blue-600 border-blue-700 text-white shadow-inner' : 'bg-white border-gray-300 text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600' }}"
-                        title="Ke Soal No. {{ $index + 1 }}">
+                    {{ in_array($qId, $selected) ? 'bg-blue-600 border-blue-700 text-white shadow-inner' : 'bg-white border-gray-300 text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600' }}">
                         {{ $index + 1 }}
                     </button>
                 @endforeach
@@ -183,7 +237,7 @@ new class extends Component {
                         <input type="checkbox" wire:model.live="selectAll"
                             class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
                     </th>
-                    <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs w-24">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Cuplikan Soal</th>
                     <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Kunci</th>
                     <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs w-44">Aksi</th>
@@ -198,10 +252,59 @@ new class extends Component {
                             <input type="checkbox" wire:model.live="selected" value="{{ $q->id }}"
                                 class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
                         </td>
-                        <td class="px-6 py-4 text-sm font-bold text-gray-600 text-center">
-                            <span
-                                class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs shadow-sm">{{ $q->order_num ?? 0 }}</span>
-                        </td>
+
+                        <td class="px-2 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <div class="flex flex-col gap-1">
+
+                                    @if ($questions->onFirstPage() && $loop->first)
+                                        <button disabled
+                                            class="text-gray-300 p-1 bg-gray-50 rounded cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <button wire:click="moveUp({{ $q->id }})" wire:loading.attr="disabled"
+                                            class="text-gray-500 hover:text-blue-600 transition-colors p-1 bg-gray-100 hover:bg-blue-100 rounded shadow-sm"
+                                            title="Naik">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </button>
+                                    @endif
+
+                                    @if ($questions->onLastPage() && $loop->last)
+                                        <button disabled
+                                            class="text-gray-300 p-1 bg-gray-50 rounded cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <button wire:click="moveDown({{ $q->id }})" wire:loading.attr="disabled"
+                                            class="text-gray-500 hover:text-blue-600 transition-colors p-1 bg-gray-100 hover:bg-blue-100 rounded shadow-sm"
+                                            title="Turun">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    @endif
+
+                                </div>
+                                <span
+                                    class="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-black shadow-sm min-w-[2.5rem] text-center border border-blue-200">
+                                    {{ $q->order_num ?? 0 }}
+                                </span>
+                            </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900 line-clamp-2">{!! Str::limit(strip_tags($q->question_text), 100) !!}</div>
@@ -241,17 +344,17 @@ new class extends Component {
             const element = document.getElementById(targetId);
 
             if (element) {
-                element.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-400');
+                // 1. Tambahkan efek menyala (Highlight)
+                element.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-400', 'transition-all',
+                    'duration-300');
 
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                // Baris 'scrollIntoView' sudah SAYA HAPUS di sini agar layar tidak loncat-loncat (tidak bikin pusing).
 
+                // 2. Hilangkan efek menyala setelah 2 detik
                 setTimeout(() => {
                     element.classList.remove('bg-indigo-50', 'ring-2', 'ring-indigo-400');
                 }, 2000);
             }
-        }, 300);
+        }, 300); // Jeda sedikit agar Livewire selesai me-render DOM baru
     });
 </script>

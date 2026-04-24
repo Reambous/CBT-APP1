@@ -107,7 +107,6 @@ class QuestionController extends Controller
 
     public function update(Request $request, $id)
     {
-        // 1. Validasi dulu biar aman
         $request->validate([
             'exam_package_id' => 'required|exists:exam_packages,id',
             'order_num'       => 'required|integer|min:1',
@@ -122,57 +121,39 @@ class QuestionController extends Controller
 
         try {
             DB::transaction(function () use ($request, $question, $oldOrder, $newOrder, $packageId) {
-
-                // --- LOGIKA GESER OTOMATIS ---
+                // Logika geser nomor (tetap sama seperti sebelumnya)
                 if ($oldOrder != $newOrder) {
-                    // Jika nomor diubah ke angka yang LEBIH KECIL (Contoh: soal no 5 jadi no 2)
                     if ($newOrder < $oldOrder) {
-                        Question::where('exam_package_id', $packageId)
-                            ->whereBetween('order_num', [$newOrder, $oldOrder - 1])
-                            ->orderBy('order_num', 'desc') // Geser dari bawah biar gak bentrok
-                            ->increment('order_num');
-                    }
-                    // Jika nomor diubah ke angka yang LEBIH BESAR (Contoh: soal no 2 jadi no 5)
-                    else {
-                        Question::where('exam_package_id', $packageId)
-                            ->whereBetween('order_num', [$oldOrder + 1, $newOrder])
-                            ->orderBy('order_num', 'asc')
-                            ->decrement('order_num');
+                        Question::where('exam_package_id', $packageId)->whereBetween('order_num', [$newOrder, $oldOrder - 1])->orderBy('order_num', 'desc')->increment('order_num');
+                    } else {
+                        Question::where('exam_package_id', $packageId)->whereBetween('order_num', [$oldOrder + 1, $newOrder])->orderBy('order_num', 'asc')->decrement('order_num');
                     }
                 }
 
-                // 2. Siapkan Data Update
                 $isImage = $request->has('is_answer_image');
                 $data = $request->all();
                 $data['is_answer_image'] = $isImage;
 
-                // Logika Gambar (Sudah diperbaiki format /storage/ nya)
                 if ($isImage) {
                     foreach (['a', 'b', 'c', 'd', 'e'] as $opt) {
                         if ($request->hasFile("image_$opt")) {
+                            // SIMPAN HANYA PATH (tanpa /storage/)
                             $path = $request->file("image_$opt")->store('options', 'public');
-                            $data["option_$opt"] = '/storage/' . $path;
+                            $data["option_$opt"] = $path;
                         } else {
-                            // Tetap pakai gambar lama kalau gak upload baru
+                            // Pertahankan data lama
                             $data["option_$opt"] = $question->{"option_$opt"};
                         }
                     }
-                } else {
-                    // Jika pindah ke mode teks, pastikan kolom gambar tidak merusak tampilan
-                    // (Opsi teks diambil otomatis dari $request->all() di atas)
                 }
 
-                // 3. Eksekusi Update
                 $question->update($data);
             });
 
-            // 4. Bersihkan Cache
             Cache::forget('questions_package_' . $packageId);
-
-            return redirect()->route('admin.packages.show', $packageId)
-                ->with('success', 'Soal berhasil diupdate & urutan dirapikan!');
+            return redirect()->route('admin.packages.show', $packageId)->with('success', 'Soal diperbarui!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal update: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
         }
     }
 
