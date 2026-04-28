@@ -70,7 +70,8 @@ new class extends Component {
             $previous->update(['order_num' => $tempOrder]);
 
             // 👇 TAMBAHKAN BARIS INI: Panggil animasi highlight! 👇
-            $this->dispatch('scroll-to-soal', id: 'soal-' . $id);
+            // Ubah baris ini di dalam moveUp() dan moveDown():
+            $this->dispatch('highlight-soal', id: 'soal-' . $id);
         }
     }
 
@@ -85,7 +86,8 @@ new class extends Component {
             $next->update(['order_num' => $tempOrder]);
 
             // 👇 TAMBAHKAN BARIS INI: Panggil animasi highlight! 👇
-            $this->dispatch('scroll-to-soal', id: 'soal-' . $id);
+            // Ubah baris ini di dalam moveUp() dan moveDown():
+            $this->dispatch('highlight-soal', id: 'soal-' . $id);
         }
     }
     // 👆 FITUR BARU BERAKHIR DI SINI 👆
@@ -338,23 +340,34 @@ new class extends Component {
 </div>
 
 <script>
+    // Fungsi bantuan untuk animasi menyala
+    function applyHighlight(element) {
+        element.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-400', 'transition-all', 'duration-300');
+        setTimeout(() => {
+            element.classList.remove('bg-indigo-50', 'ring-2', 'ring-indigo-400');
+        }, 2000);
+    }
+
+    // EVENT 1: Khusus Tombol Naik/Turun (HANYA MENYALA, TIDAK SCROLL)
+    document.addEventListener('highlight-soal', (event) => {
+        setTimeout(() => {
+            const element = document.getElementById(event.detail.id);
+            if (element) applyHighlight(element);
+        }, 300);
+    });
+
+    // EVENT 2: Khusus Klik Peta Nomor (SCROLL LALU MENYALA)
     document.addEventListener('scroll-to-soal', (event) => {
         setTimeout(() => {
-            let targetId = event.detail.id;
-            const element = document.getElementById(targetId);
-
+            const element = document.getElementById(event.detail.id);
             if (element) {
-                // 1. Tambahkan efek menyala (Highlight)
-                element.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-400', 'transition-all',
-                    'duration-300');
-
-                // Baris 'scrollIntoView' sudah SAYA HAPUS di sini agar layar tidak loncat-loncat (tidak bikin pusing).
-
-                // 2. Hilangkan efek menyala setelah 2 detik
-                setTimeout(() => {
-                    element.classList.remove('bg-indigo-50', 'ring-2', 'ring-indigo-400');
-                }, 2000);
+                // Perintah untuk loncat/scroll ke elemen
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                applyHighlight(element);
             }
-        }, 300); // Jeda sedikit agar Livewire selesai me-render DOM baru
+        }, 300);
     });
 </script>
