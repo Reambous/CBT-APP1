@@ -166,7 +166,9 @@ new class extends Component {
                                 class="text-gray-500 hover:text-red-600 font-bold text-sm">✕ Keluar</a>
                             <h3 class="font-bold text-blue-800">Soal {{ $currentQuestionIndex + 1 }}</h3>
                         </div>
-                        <div class="bg-red-600 text-white font-mono font-bold px-4 py-1 rounded-full text-sm">
+                        {{-- TAMBAHKAN wire:ignore DI SINI 👇 --}}
+                        <div wire:ignore
+                            class="bg-red-600 text-white font-mono font-bold px-4 py-1 rounded-full text-sm">
                             <span x-text="timer.displayTime">00:00:00</span>
                         </div>
                     </div>
@@ -264,21 +266,32 @@ new class extends Component {
             function timerData() {
                 return {
                     endTime: new Date("{{ $endTime }}").getTime(),
-                    displayTime: '00:00:00',
+                    displayTime: '00:00:00', // Tampilan awal (akan langsung tertimpa)
+
                     startTimer() {
-                        let interval = setInterval(() => {
+                        // Kita buat fungsi penghitung terpisah
+                        const updateTime = () => {
                             let dist = this.endTime - new Date().getTime();
                             if (dist < 0) {
-                                clearInterval(interval);
                                 this.displayTime = "HABIS";
                                 @this.call('finishExam');
-                                return;
+                                return false; // Berhenti
                             }
                             let h = Math.floor(dist / 3600000);
                             let m = Math.floor((dist % 3600000) / 60000);
                             let s = Math.floor((dist % 60000) / 1000);
                             this.displayTime =
                                 `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                            return true; // Lanjut
+                        };
+
+                        updateTime(); // 👉 PANGGIL LANGSUNG! Tanpa nunggu 1 detik
+
+                        // Baru set interval untuk detak detik selanjutnya
+                        let interval = setInterval(() => {
+                            if (!updateTime()) {
+                                clearInterval(interval);
+                            }
                         }, 1000);
                     }
                 }
