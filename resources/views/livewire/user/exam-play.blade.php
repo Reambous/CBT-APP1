@@ -240,7 +240,10 @@ new class extends Component {
                 <div class="w-full md:w-1/4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border sticky top-4">
                         <h4 class="font-bold text-gray-400 text-xs uppercase tracking-widest mb-4">Navigasi</h4>
-                        <div class="flex flex-wrap gap-2">
+
+                        {{-- FIX: Tambahkan batas tinggi (max-h) dan overflow-y-auto agar bisa discroll --}}
+                        <div class="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-2 pb-2">
+
                             @foreach ($questions as $index => $q)
                                 <button wire:click="jumpToQuestion({{ $index }})"
                                     class="w-9 h-9 flex items-center justify-center font-bold text-xs border rounded-lg transition-all"
@@ -256,6 +259,7 @@ new class extends Component {
                                     {{ $index + 1 }}
                                 </button>
                             @endforeach
+
                         </div>
                     </div>
                 </div>

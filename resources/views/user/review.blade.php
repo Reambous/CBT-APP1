@@ -122,7 +122,7 @@
                         pembahasan)</span>
                 </h3>
                 <div class="flex flex-wrap gap-1.5 overflow-visible">
-                    @foreach ($result->examPackage->questions as $index => $q)
+                    @foreach ($result->examPackage->questions->sortBy('order_num')->values() as $index => $q)
                         @php
                             $ans = $result->userAnswers->where('question_id', $q->id)->first();
                             $isAnswered = $ans && $ans->selected_option;
@@ -147,7 +147,7 @@
             </div>
 
             @php
-                $chunks = $result->examPackage->questions->chunk(20);
+                $chunks = $result->examPackage->questions->sortBy('order_num')->values()->chunk(20);
             @endphp
 
             <div id="question-container">

@@ -143,7 +143,8 @@ new class extends Component {
     {
         $query = Question::where('exam_package_id', $this->package->id)
             ->where('question_text', 'like', '%' . $this->search . '%')
-            ->orderBy('order_num', 'asc');
+            ->orderBy('order_num', 'asc')
+            ->orderBy('id', 'asc'); // <--- TAMBAHKAN BARIS INI
 
         return [
             'allQuestionIds' => (clone $query)->pluck('id'),
