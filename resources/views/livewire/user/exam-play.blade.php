@@ -1,15 +1,21 @@
 <?php
 
-use Livewire\Volt\Component;
+use Livewire\Component;
 use App\Models\UserResult;
 use App\Models\UserAnswer;
 use App\Models\Question;
 use Illuminate\Support\Facades\Redis;
+// Pastikan namespace dan use di atas sesuai dengan file aslimu ya!
 
-new class extends Component {
+class ExamPlayer extends Component
+{
     public $result_id;
     public $exam_package_id;
-    public $questions;
+
+    // 1. KITA HAPUS public $questions;
+    // 2. KITA GANTI dengan ini untuk tahu jumlah soal saja (sangat ringan):
+    public $totalQuestions = 0;
+
     public $currentQuestionIndex = 0;
     public $answers = [];
     public $endTime;
@@ -30,14 +36,12 @@ new class extends Component {
 
         $this->exam_package_id = $result->exam_package_id;
 
-        // FIX: Tambahkan orderBy agar urutan soal sinkron dengan Admin
-        $this->questions = \Illuminate\Support\Facades\Cache::remember('questions_package_' . $this->exam_package_id, 7200, function () {
-            return Question::where('exam_package_id', $this->exam_package_id)->orderBy('order_num', 'asc')->get()->toArray();
-        });
+        // 3. KITA UBAH CARA HITUNG TOTAL SOAL
+        $questions = $this->getAllQuestionsFromCache();
+        $this->totalQuestions = count($questions);
 
         $this->currentQuestionIndex = session('last_q_' . $this->result_id, 0);
 
-        // FIX: Pastikan format waktu ISO agar JS tidak Error (NaN)
         if ($result->ends_at) {
             $this->endTime = \Carbon\Carbon::parse($result->ends_at)->toIso8601String();
         } else {
@@ -45,8 +49,15 @@ new class extends Component {
             $this->endTime = $result->created_at->addMinutes($durationMinutes)->toIso8601String();
         }
 
-        // FIX: Ambil jawaban lama agar tidak hilang saat refresh
         $this->answers = UserAnswer::where('result_id', $result_id)->pluck('selected_option', 'question_id')->mapWithKeys(fn($item, $key) => [(string) $key => $item])->toArray();
+    }
+
+    // 4. TAMBAHKAN FUNGSI INI SEBAGAI "PENGAMBIL SOAL DARI GUDANG"
+    protected function getAllQuestionsFromCache()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('questions_package_' . $this->exam_package_id, 7200, function () {
+            return Question::where('exam_package_id', $this->exam_package_id)->orderBy('order_num', 'asc')->get()->toArray();
+        });
     }
 
     public function updateSessionIndex()
@@ -80,11 +91,14 @@ new class extends Component {
             Redis::del($redisKey);
         }
 
-        $totalQuestions = count($this->questions);
+        // 5. UBAH CARA PENILAIAN, AMBIL DARI FUNGSI CACHE
+        $questions = $this->getAllQuestionsFromCache();
+        $totalQuestions = count($questions);
         $correctAnswersCount = 0;
         $userAnswers = UserAnswer::where('result_id', $this->result_id)->get();
 
-        foreach ($this->questions as $question) {
+        foreach ($questions as $question) {
+            // Ganti dari $this->questions
             $userAns = $userAnswers->where('question_id', $question['id'])->first();
             if ($userAns) {
                 $isCorrect = trim(strtoupper($userAns->selected_option)) === trim(strtoupper($question['correct_answer']));
@@ -105,11 +119,13 @@ new class extends Component {
 
     public function nextQuestion()
     {
-        if ($this->currentQuestionIndex < count($this->questions) - 1) {
+        // 6. GANTI LOGIKA COUNT
+        if ($this->currentQuestionIndex < $this->totalQuestions - 1) {
             $this->currentQuestionIndex++;
             $this->updateSessionIndex();
         }
     }
+
     public function prevQuestion()
     {
         if ($this->currentQuestionIndex > 0) {
@@ -117,12 +133,24 @@ new class extends Component {
             $this->updateSessionIndex();
         }
     }
+
     public function jumpToQuestion($index)
     {
         $this->currentQuestionIndex = $index;
         $this->updateSessionIndex();
     }
-}; ?>
+
+    // 7. TAMBAHKAN FUNGSI RENDER INI AGAR BLADE TETAP BISA MEMBACA SOAL
+    public function render()
+    {
+        $allQuestions = $this->getAllQuestionsFromCache();
+
+        return view('livewire.exam-player', [
+            // Sesuaikan nama view-nya jika berbeda
+            'questions' => $allQuestions,
+        ]);
+    }
+} ?>
 
 <div>
     <style>
